@@ -1,0 +1,5 @@
+<div class="mail-tabs">
+  <a href="{% url 'mail_compose' %}" class="btn-primary">✎ Compose</a>
+  <a href="{% url 'mail_inbox' %}" class="mt {% if box == 'inbox' %}on{% endif %}">Inbox{% if unread_mail %} ({{ unread_mail }}){% endif %}</a>
+  <a href="{% url 'mail_sent' %}" class="mt {% if box == 'sent' %}on{% endif %}">Sent</a>
+</div>

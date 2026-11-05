@@ -1,0 +1,28 @@
+{% extends "portal/base.html" %}
+{% block title %}Study Module — Oyla Platform{% endblock %}
+{% block extra_style %}
+<style>
+  .sm-card { display: block; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px; background: #fff; }
+  .sm-card:hover { border-color: #b9cdf6; }
+  .sm-code { font-size: 11px; font-weight: 700; color: var(--blue); text-transform: uppercase; letter-spacing: .05em; }
+  .sm-name { font-size: 17px; font-weight: 700; color: var(--navy); margin: 2px 0 6px; }
+  .sm-meta { font-size: 13px; color: var(--muted); }
+</style>
+{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>Study Module</h1>
+    <p>The programme of each course: its modules, lessons and what every lesson contains.</p>
+  </div>
+  <div class="card">
+    {% for c in courses %}
+      <a class="sm-card" href="{% url 'study_module_course' c.id %}">
+        {% if c.number %}<div class="sm-code">{{ c.number }}</div>{% endif %}
+        <div class="sm-name">{{ c.name }}</div>
+        <div class="sm-meta">{{ c.module_count }} module{{ c.module_count|pluralize }} · {{ c.step_count }} step{{ c.step_count|pluralize }} — open programme →</div>
+      </a>
+    {% empty %}
+      <p class="empty-note">No courses to show yet.{% if user.role == 'student' %} Join a class with an invite link first.{% endif %}</p>
+    {% endfor %}
+  </div>
+{% endblock %}

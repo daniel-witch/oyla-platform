@@ -1,0 +1,88 @@
+{% extends "portal/base.html" %}
+{% block title %}Announcements — Oyla Platform{% endblock %}
+{% block extra_style %}
+<style>
+  .paper { background: #fffdf8; border: 1px solid #e9e3d3; border-radius: 6px; padding: 26px 30px 32px; font-family: Georgia, "Times New Roman", serif; color: #1d1a14; }
+  .masthead { text-align: center; border-bottom: 3px double #1d1a14; padding-bottom: 10px; margin-bottom: 6px; }
+  .masthead .title { font-size: 40px; font-weight: 700; letter-spacing: .02em; line-height: 1.05; }
+  .masthead .tag { font-style: italic; font-size: 14px; color: #5b5444; margin-top: 4px; }
+  .dateline { display: flex; justify-content: space-between; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 11.5px; text-transform: uppercase; letter-spacing: .08em; color: #5b5444; border-bottom: 1px solid #1d1a14; padding: 6px 0; margin-bottom: 18px; flex-wrap: wrap; gap: 6px; }
+  .sections { display: flex; gap: 6px; flex-wrap: wrap; }
+  .sections a { padding: 2px 8px; border-radius: 3px; }
+  .sections a.on { background: #1d1a14; color: #fffdf8; }
+  .kicker { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: #a3341d; }
+  .byline { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 12px; color: #6b6352; margin: 6px 0 10px; }
+  .lead h2 { font-size: 34px; line-height: 1.12; margin: 6px 0 4px; }
+  .lead p { font-size: 17px; line-height: 1.6; margin: 0; }
+  .lead-wrap { display: grid; grid-template-columns: 2fr 1fr; gap: 28px; border-bottom: 1px solid #1d1a14; padding-bottom: 22px; margin-bottom: 20px; }
+  .lead-side { border-left: 1px solid #d8d0bd; padding-left: 22px; }
+  .lead-side h4 { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 12px; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 10px; }
+  .lead-side a { display: block; padding: 8px 0; border-bottom: 1px dotted #cfc6b1; font-size: 15px; font-weight: 700; }
+  .cols { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; }
+  .col { padding: 0 18px; border-left: 1px solid #d8d0bd; }
+  .col:first-child { padding-left: 0; border-left: none; }
+  .col h3 { font-size: 21px; line-height: 1.2; margin: 6px 0 2px; }
+  .col p { font-size: 14.5px; line-height: 1.55; margin: 0; }
+  .more { border-top: 1px solid #1d1a14; margin-top: 22px; padding-top: 14px; }
+  .more a { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px dotted #cfc6b1; font-size: 15px; }
+  .more a span { font-family: -apple-system, "Segoe UI", Roboto, sans-serif; font-size: 12px; color: #6b6352; white-space: nowrap; }
+  .paper a:hover h2, .paper a:hover h3, .lead-side a:hover, .more a:hover { text-decoration: underline; }
+  .empty { text-align: center; font-style: italic; padding: 40px 0; }
+  @media (max-width: 760px) {
+    .paper { padding: 18px 16px; } .masthead .title { font-size: 28px; }
+    .lead-wrap, .cols { grid-template-columns: 1fr; } .lead-side { border-left: none; padding-left: 0; }
+    .col { border-left: none; padding: 0 0 16px; } .lead h2 { font-size: 26px; }
+  }
+</style>
+{% endblock %}
+{% block content %}
+  {% if can_publish %}<div style="display:flex;justify-content:flex-end;margin-bottom:12px;"><a href="{% url 'announcement_new' %}" class="btn-primary" style="padding:9px 14px;font-size:13px;">+ New announcement</a></div>{% endif %}
+  <div class="paper">
+    <div class="masthead">
+      <div class="title">The Oyla Gazette</div>
+      <div class="tag">News, events and guides for every student, teacher and coach</div>
+    </div>
+    <div class="dateline">
+      <span>{% now "l, j F Y" %}</span>
+      <span class="sections">
+        <a href="{% url 'announcements' %}" class="{% if not category %}on{% endif %}">All</a>
+        {% for value, label in categories %}<a href="?category={{ value }}" class="{% if category == value %}on{% endif %}">{{ label }}</a>{% endfor %}
+      </span>
+    </div>
+
+    {% if lead %}
+      <div class="lead-wrap">
+        <a class="lead" href="{% url 'announcement_detail' lead.id %}">
+          <div class="kicker">{{ lead.get_category_display }}{% if lead.is_pinned %} · Headline{% endif %}</div>
+          <h2>{{ lead.title }}</h2>
+          <div class="byline">By {{ lead.author_name }} · {{ lead.created_at|date:"j M Y" }}</div>
+          <p>{{ lead.lead }}</p>
+        </a>
+        <div class="lead-side">
+          <h4>Guides</h4>
+          {% for g in guides %}<a href="{% url 'announcement_detail' g.id %}">{{ g.title }}</a>{% empty %}<p style="font-size:14px;font-style:italic;">No guides yet.</p>{% endfor %}
+        </div>
+      </div>
+      {% if secondary %}
+      <div class="cols">
+        {% for a in secondary %}
+          <a class="col" href="{% url 'announcement_detail' a.id %}">
+            <div class="kicker">{{ a.get_category_display }}</div>
+            <h3>{{ a.title }}</h3>
+            <div class="byline">{{ a.author_name }} · {{ a.created_at|date:"j M" }}</div>
+            <p>{{ a.lead|truncatewords:30 }}</p>
+          </a>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% if rest %}
+        <div class="more">
+          <div class="kicker" style="margin-bottom:6px;">Earlier</div>
+          {% for a in rest %}<a href="{% url 'announcement_detail' a.id %}">{{ a.title }} <span>{{ a.get_category_display }} · {{ a.created_at|date:"j M Y" }}</span></a>{% endfor %}
+        </div>
+      {% endif %}
+    {% else %}
+      <div class="empty">Nothing has been published in this section yet.</div>
+    {% endif %}
+  </div>
+{% endblock %}

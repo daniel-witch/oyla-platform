@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Sign up — Oyla Platform</title>
+{% include "portal/_app_head.html" %}
+{% include "portal/_auth_style.html" %}
+</head>
+<body>
+  <div class="auth-brand"><img src="/static/portal/icons/icon-192.png" alt=""> Oyla Platform</div>
+  <h2>Create an account</h2>
+  {% if messages %}
+    {% for message in messages %}
+      <p style="color: {% if message.tags == 'error' %}red{% else %}#1a5%{% endif %};">{{ message }}</p>
+    {% endfor %}
+  {% endif %}
+  {% if form.non_field_errors %}
+    <p style="color: red;">{{ form.non_field_errors.0 }}</p>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <p>
+      <label>I am a...<br>
+        <select name="role">
+          <option value="student">Student</option>
+          <option value="teacher">Teacher</option>
+          <option value="coach">Coach</option>
+        </select>
+      </label>
+    </p>
+    <p><label>Username<br><input type="text" name="username" required></label>
+      {% if form.username.errors %}<br><span style="color:red;">{{ form.username.errors.0 }}</span>{% endif %}
+    </p>
+    <p><label>First name<br><input type="text" name="first_name"></label></p>
+    <p><label>Last name<br><input type="text" name="last_name"></label></p>
+    <p><label>Email<br><input type="email" name="email" required></label>
+      <br><span style="color:#666; font-size: 0.85em;">A verification code will be sent here before your account is created.</span>
+    </p>
+    <p><label>Password<br><input type="password" name="password" required></label>
+      {% if form.password.errors %}<br><span style="color:red;">{{ form.password.errors.0 }}</span>{% endif %}
+    </p>
+    <p><label>Confirm password<br><input type="password" name="confirm_password" required></label></p>
+    <button type="submit">Sign up</button>
+  </form>
+  <p><a href="/login/">Already have an account? Log in</a></p>
+</body>
+</html>

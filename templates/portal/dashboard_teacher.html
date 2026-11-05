@@ -1,0 +1,175 @@
+{% extends "portal/base.html" %}
+{% block title %}Dashboard — Oyla Platform{% endblock %}
+
+{% block extra_style %}
+<style>
+  .class-card { border: 1px solid var(--border); border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
+  .class-card:last-child { margin-bottom: 0; }
+  .class-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+  .class-name { font-size: 14.5px; font-weight: 700; }
+  .class-course { font-size: 12px; color: var(--blue); font-weight: 600; }
+  .class-meta { font-size: 12.5px; color: var(--muted); margin-bottom: 10px; }
+  .class-foot { display: flex; align-items: center; justify-content: space-between; }
+  .roster-avatars { display: flex; }
+  .roster-avatars span { width: 26px; height: 26px; border-radius: 50%; background: var(--blue-light); color: var(--blue); font-size: 10px; font-weight: 700; display: flex; align-items: center; justify-content: center; border: 2px solid #fff; margin-left: -8px; }
+  .roster-avatars span:first-child { margin-left: 0; }
+  .list-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .list-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .list-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--purple-light); color: var(--purple); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .list-info { flex: 1; }
+  .list-info .l-title { font-size: 13px; font-weight: 600; }
+  .list-info .l-meta { font-size: 11.5px; color: var(--muted); }
+  .feedback-form { display: flex; gap: 6px; margin-top: 8px; }
+  .feedback-form input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 6px; padding: 7px 9px; font-size: 12px; font-family: inherit; }
+  .feedback-form.open { display: flex; }
+  .feedback-toggle-row { display: flex; align-items: center; gap: 12px; width: 100%; }
+  .review-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .review-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .review-info { flex: 1; }
+  .review-info .r-title { font-size: 13px; font-weight: 600; }
+  .review-info .r-meta { font-size: 11.5px; color: var(--muted); }
+  .review-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 5px;
+    background: var(--amber-light); color: var(--amber); flex-shrink: 0; }
+  .review-open { font-size: 12px; font-weight: 700; color: var(--blue); padding: 6px 12px; border-radius: 6px;
+    border: 1px solid #cddcfb; background: #fff; flex-shrink: 0; text-decoration: none; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+  <div class="page-head">
+    <h1>Welcome back, {{ user.first_name|default:user.username }} <span class="pill pill-blue" style="font-size:12px;vertical-align:middle;">{{ user.personal_id }}</span></h1>
+    <p>
+      {% if class_sessions %}
+        You're teaching {{ class_sessions|length }} class session{{ class_sessions|length|pluralize }}.
+      {% else %}
+        No classes assigned yet.
+      {% endif %}
+    </p>
+  </div>
+
+  <div class="stat-row four">
+    <div class="card stat-card blue">
+      <div class="label">Class sessions</div>
+      <div class="value">{{ class_sessions|length }}</div>
+      <div class="sub">assigned to you</div>
+    </div>
+    <div class="card stat-card green">
+      <div class="label">Total students</div>
+      <div class="value">{{ roster|length }}</div>
+      <div class="sub">across all classes</div>
+    </div>
+    <div class="card stat-card amber">
+      <div class="label">Next live session</div>
+      {% with next_ev=upcoming|first %}
+        {% if next_ev %}
+          <div class="value" style="font-size:18px;">{{ next_ev.when|date:"D, g:i A" }}</div>
+          <div class="sub">{{ next_ev.title }}</div>
+        {% else %}
+          <div class="value" style="font-size:18px;">—</div>
+          <div class="sub">nothing scheduled</div>
+        {% endif %}
+      {% endwith %}
+    </div>
+    <div class="card stat-card">
+      <div class="label">Courses</div>
+      <div class="value" style="font-size:18px;">
+        {% regroup class_sessions by course as course_list %}{{ course_list|length }}
+      </div>
+      <div class="sub">taught this term</div>
+    </div>
+  </div>
+
+  <div class="content-row">
+    <div class="card">
+      <div class="section-title">Your classes</div>
+      {% for cs in class_sessions %}
+        <div class="class-card">
+          <div class="class-head">
+            <div class="class-name">{{ cs.name }}</div>
+            <div class="class-course">{{ cs.course.name }}</div>
+          </div>
+          <div class="class-meta">
+            {{ cs.groups.all|length }} student{{ cs.groups.all|length|pluralize }}
+            · starts {{ cs.start_date|date:"M j, Y" }}
+            {% if cs.finish_date %} – {{ cs.finish_date|date:"M j, Y" }}{% endif %}
+          </div>
+          <div class="class-foot">
+            <div class="roster-avatars">
+              {% for g in cs.groups.all|slice:":4" %}
+                <span title="{{ g.student.get_full_name|default:g.student.username }}">{{ g.student.first_name|slice:":1"|upper }}{{ g.student.last_name|slice:":1"|upper }}</span>
+              {% endfor %}
+              {% if cs.groups.all|length > 4 %}<span>+{{ cs.groups.all|length|add:"-4" }}</span>{% endif %}
+            </div>
+            <a href="{{ cs.join_link }}" target="_blank" rel="noopener" class="btn-meet">Start Google Meet</a>
+          </div>
+        </div>
+      {% empty %}
+        <p class="empty-note">You haven't been assigned any classes yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="side-col">
+      <div class="card">
+        <div class="cal-head"><div class="cal-title">{{ cal_month_label }}</div></div>
+        <div class="cal-grid">
+          <div class="cal-dow">M</div><div class="cal-dow">T</div><div class="cal-dow">W</div>
+          <div class="cal-dow">T</div><div class="cal-dow">F</div><div class="cal-dow">S</div><div class="cal-dow">S</div>
+          {% for week in cal_weeks %}
+            {% for day in week %}
+              <div class="cal-cell {% if not day.in_month %}muted{% endif %} {% if day.is_today %}today{% endif %}">
+                {{ day.date.day }}
+                {% if day.events %}
+                  <div class="cal-dots">{% for ev in day.events %}<span class="cal-dot dot-{{ ev.kind }}"></span>{% endfor %}</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+        <div class="cal-legend"><span><span class="cal-dot dot-live"></span> Class session</span></div>
+      </div>
+
+      <div class="card">
+        <div class="section-title">Submissions to review
+          {% if pending_submissions %}<span class="count-pill">{{ pending_submissions|length }} new</span>{% endif %}
+        </div>
+        {% for c in pending_submissions %}
+          <div class="review-item">
+            <span class="review-tag">{{ c.step.get_step_type_display }}</span>
+            <div class="review-info">
+              <div class="r-title">{{ c.student.get_full_name|default:c.student.username }} <small style="color:var(--muted);font-weight:600;">{{ c.student.code }}</small></div>
+              <div class="r-meta">{{ c.step.display_name }} · {{ c.step.lesson.module.name }} / {{ c.step.lesson.name }}</div>
+            </div>
+            <a href="{% url 'step_detail' c.step_id %}" target="_blank" rel="noopener" class="review-open">Open ↗</a>
+          </div>
+        {% empty %}
+          <p class="empty-note">Nothing waiting on you right now.</p>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="section-title">Students awaiting feedback</div>
+        {% for r in roster|slice:":6" %}
+          <div class="list-item">
+            <div class="feedback-toggle-row">
+              <div class="list-avatar">{{ r.student.first_name|slice:":1"|upper }}{{ r.student.last_name|slice:":1"|upper }}</div>
+              <div class="list-info">
+                <div class="l-title">{{ r.student.get_full_name|default:r.student.username }} <small style="color:var(--muted);font-weight:600;">{{ r.student.code }}</small> — {{ r.class_session.name }}</div>
+                <div class="l-meta">
+                  {% if r.last_feedback %}Last feedback {{ r.last_feedback.created_at|timesince }} ago{% else %}No feedback yet{% endif %}
+                </div>
+                <form method="post" action="{% url 'give_feedback' r.student.id %}" class="feedback-form">
+                  {% csrf_token %}
+                  <input type="text" name="content" placeholder="Write a quick note…" maxlength="500" required>
+                  <button type="submit" class="btn">Send</button>
+                </form>
+              </div>
+            </div>
+          </div>
+        {% empty %}
+          <p class="empty-note">No students yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

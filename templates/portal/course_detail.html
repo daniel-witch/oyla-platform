@@ -1,0 +1,51 @@
+{% extends "portal/base.html" %}
+{% block title %}{{ course.name }} — Oyla Platform{% endblock %}
+
+{% block extra_style %}
+<style>
+  .mod-row { display: flex; align-items: center; gap: 16px; border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 12px; background: #fff; }
+  a.mod-row:hover { border-color: #b9cdf6; box-shadow: 0 4px 14px rgba(26,86,219,.08); }
+  .mod-row.locked { background: #f7f8fb; color: #9aa3b2; cursor: not-allowed; }
+  .mod-row.current { border: 2px solid var(--blue); }
+  .mod-num { width: 40px; height: 40px; border-radius: 10px; background: var(--blue-light); color: var(--blue); display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0; }
+  .mod-row.completed .mod-num { background: var(--green-light); color: var(--green); }
+  .mod-row.locked .mod-num { background: #eceef3; color: #9aa3b2; }
+  .mod-info { flex: 1; min-width: 0; }
+  .mod-name { font-size: 16px; font-weight: 700; }
+  .mod-meta { font-size: 12.5px; color: var(--muted); margin-top: 3px; }
+  .mod-bar { height: 6px; border-radius: 4px; background: #eef0f5; overflow: hidden; margin-top: 10px; max-width: 360px; }
+  .mod-bar span { display: block; height: 100%; background: var(--blue); }
+  .mod-row.completed .mod-bar span { background: var(--green); }
+  .mod-go { font-size: 13px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="crumbs"><a href="{% url 'enrollments' %}">My Enrollments</a> / {{ course.name }}</div>
+  <div class="page-head">
+    <h1>{{ course.name }}</h1>
+    <p>{{ progress.approved }} of {{ progress.total }} steps completed ({{ progress.percent }}%). Modules open one at a time — finish the current module to unlock the next.</p>
+  </div>
+
+  <div class="card">
+    <div class="section-title"><span>Modules</span><a href="{% url 'study_module_course' course.id %}" class="btn">Study module programme</a></div>
+    {% for m in modules %}
+      {% if m.is_open %}<a href="{% url 'module_detail' m.id %}" class="mod-row {{ m.state }}">{% else %}<div class="mod-row locked" aria-disabled="true">{% endif %}
+        <div class="mod-num">{% if m.state == 'completed' %}✓{% elif m.state == 'locked' %}🔒{% else %}{{ forloop.counter }}{% endif %}</div>
+        <div class="mod-info">
+          <div class="mod-name">{{ m.name }}</div>
+          <div class="mod-meta">
+            {{ m.lessons.all|length }} lesson{{ m.lessons.all|length|pluralize }} · {{ m.total_steps }} step{{ m.total_steps|pluralize }}
+            {% if m.state == 'current' %} · <span class="pill pill-blue">Current module</span>
+            {% elif m.state == 'completed' %} · <span class="pill pill-green">Finished</span>
+            {% else %} · <span class="pill pill-gray">Locked</span>{% endif %}
+          </div>
+          {% if m.is_open %}<div class="mod-bar"><span style="width: {{ m.percent }}%"></span></div>{% endif %}
+        </div>
+        {% if m.is_open %}<span class="mod-go">Open →</span>{% endif %}
+      {% if m.is_open %}</a>{% else %}</div>{% endif %}
+    {% empty %}
+      <p class="empty-note">This course has no modules yet.</p>
+    {% endfor %}
+  </div>
+{% endblock %}

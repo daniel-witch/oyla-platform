@@ -1,0 +1,15 @@
+{% load i18n %}
+<label for="json-box">{{ label }}</label>
+<textarea name="json_text" id="json-box" rows="14" spellcheck="false"{% if form.error_line %} data-error-line="{{ form.error_line }}"{% endif %}>{{ form.json_text.value|default_if_none:"" }}</textarea>
+{{ form.json_text.errors }}
+{% include "datastore/_error_snippet.html" %}
+<div id="check-msg" class="check-msg" aria-live="polite"></div>
+<div class="ds-btns" style="margin-top:8px;">
+  <button type="button" class="ds-btn" id="btn-check">✓ {% translate "Check my JSON" %}</button>
+  <button type="button" class="ds-btn" id="btn-format">✨ {% translate "Make it neat" %}</button>
+  <button type="button" class="ds-btn ghost" id="btn-example">📄 {% translate "Load example" %}</button>
+</div>
+<script type="application/json" id="example-json">{{ example|safe }}</script>
+<label for="id_json_file">{% translate "…or upload a .json file" %}</label>
+<input type="file" name="json_file" id="id_json_file" accept=".json,application/json">
+{{ form.json_file.errors }}

@@ -1,0 +1,17 @@
+{% extends "portal/base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Delete" %} — Oyla Platform{% endblock %}
+{% block extra_style %}{% include "datastore/_styles.html" %}{% endblock %}
+{% block content %}
+<div class="ds-page">
+  <div class="card" style="max-width:560px;">
+    <h1 style="font-size:22px;margin:0 0 10px;">{% translate "Delete this item?" %}</h1>
+    <p style="font-size:15px;">{% blocktranslate with title=record.title %}“{{ title }}” will be removed for good. This can't be undone.{% endblocktranslate %}</p>
+    <form method="post" class="ds-btns" style="margin-top:16px;">
+      {% csrf_token %}
+      <button type="submit" class="ds-btn danger">{% translate "Yes, delete it" %}</button>
+      <a href="{% url 'data_detail' record.pk %}" class="ds-btn ghost">{% translate "No, keep it" %}</a>
+    </form>
+  </div>
+</div>
+{% endblock %}

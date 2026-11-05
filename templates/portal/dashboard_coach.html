@@ -1,0 +1,177 @@
+{% extends "portal/base.html" %}
+{% block title %}Dashboard — Oyla Platform{% endblock %}
+
+{% block extra_style %}
+<style>
+  .student-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .student-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .s-avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--blue-light); color: var(--blue); font-size: 12px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .s-info { flex: 1; }
+  .s-info .s-name { font-size: 13.5px; font-weight: 600; }
+  .s-info .s-meta { font-size: 11.5px; color: var(--muted); }
+  .s-progress { width: 110px; flex-shrink: 0; }
+  .s-bar { height: 6px; border-radius: 4px; background: #eef0f5; overflow: hidden; margin-bottom: 3px; }
+  .s-bar > span { display: block; height: 100%; background: var(--green); border-radius: 4px; }
+  .s-progress .s-pct { font-size: 10.5px; color: var(--muted); text-align: right; }
+
+  .meetup-item { padding: 12px 0; border-bottom: 1px solid var(--border); }
+  .meetup-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .meetup-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+  .meetup-name { font-size: 13px; font-weight: 700; }
+  .status-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 5px; letter-spacing: .03em; }
+  .status-requested { background: var(--amber-light); color: var(--amber); }
+  .status-scheduled { background: var(--blue-light); color: var(--blue); }
+  .meetup-notes { font-size: 12px; color: var(--muted); margin-bottom: 8px; }
+  .schedule-form { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; margin-bottom: 8px; }
+  .schedule-form input { border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; font-size: 11.5px; font-family: inherit; }
+  .schedule-form input[name="scheduled_time"] { flex: 1; min-width: 150px; }
+  .schedule-form input[name="meeting_link"] { flex: 2; min-width: 160px; }
+  .meetup-actions { display: flex; gap: 8px; }
+  .review-item { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .review-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .review-info { flex: 1; }
+  .review-info .r-title { font-size: 13px; font-weight: 600; }
+  .review-info .r-meta { font-size: 11.5px; color: var(--muted); }
+  .review-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; padding: 3px 8px; border-radius: 5px;
+    background: var(--amber-light); color: var(--amber); flex-shrink: 0; }
+  .review-open { font-size: 12px; font-weight: 700; color: var(--blue); padding: 6px 12px; border-radius: 6px;
+    border: 1px solid #cddcfb; background: #fff; flex-shrink: 0; text-decoration: none; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+  <div class="page-head">
+    <h1>Welcome back, {{ user.first_name|default:user.username }} <span class="pill pill-blue" style="font-size:12px;vertical-align:middle;">{{ user.personal_id }}</span></h1>
+    <p>You're coaching {{ groups|length }} student{{ groups|length|pluralize }}.</p>
+  </div>
+
+  <div class="stat-row four">
+    <div class="card stat-card amber">
+      <div class="label">Meetup requests</div>
+      <div class="value">{{ meetup_requests|length }}</div>
+      <div class="sub">awaiting your response</div>
+    </div>
+    <div class="card stat-card blue">
+      <div class="label">Students coached</div>
+      <div class="value">{{ groups|length }}</div>
+      <div class="sub">assigned to you</div>
+    </div>
+    <div class="card stat-card green">
+      <div class="label">Scheduled meetups</div>
+      <div class="value">{{ scheduled_meetups|length }}</div>
+      <div class="sub">confirmed</div>
+    </div>
+    <div class="card stat-card">
+      <div class="label">Next meetup</div>
+      {% with next_ev=upcoming|first %}
+        {% if next_ev %}
+          <div class="value" style="font-size:18px;">{{ next_ev.when|date:"D, g:i A" }}</div>
+          <div class="sub">{{ next_ev.title }}</div>
+        {% else %}
+          <div class="value" style="font-size:18px;">—</div>
+          <div class="sub">nothing scheduled</div>
+        {% endif %}
+      {% endwith %}
+    </div>
+  </div>
+
+  <div class="content-row">
+    <div class="card">
+      <div class="section-title">Your students</div>
+      {% for g in groups %}
+        <div class="student-row">
+          <div class="s-avatar">{{ g.student.first_name|slice:":1"|upper }}{{ g.student.last_name|slice:":1"|upper }}</div>
+          <div class="s-info">
+            <div class="s-name">{{ g.student.get_full_name|default:g.student.username }} <small style="color:var(--muted);font-weight:600;">{{ g.student.code }}</small></div>
+            <div class="s-meta">{{ g.class_session.name }} · {{ g.class_session.course.name }}</div>
+          </div>
+          <div class="s-progress">
+            <div class="s-bar"><span style="width:{{ g.student.view_progress }}%"></span></div>
+            <div class="s-pct">{{ g.student.view_progress }}%</div>
+          </div>
+        </div>
+      {% empty %}
+        <p class="empty-note">No students assigned yet.</p>
+      {% endfor %}
+    </div>
+
+    <div class="side-col">
+      <div class="card">
+        <div class="section-title">Submissions to review
+          {% if pending_submissions %}<span class="count-pill">{{ pending_submissions|length }} new</span>{% endif %}
+        </div>
+        {% for c in pending_submissions %}
+          <div class="review-item">
+            <span class="review-tag">{{ c.step.get_step_type_display }}</span>
+            <div class="review-info">
+              <div class="r-title">{{ c.student.get_full_name|default:c.student.username }} <small style="color:var(--muted);font-weight:600;">{{ c.student.code }}</small></div>
+              <div class="r-meta">{{ c.step.display_name }} · {{ c.step.lesson.module.name }} / {{ c.step.lesson.name }}</div>
+            </div>
+            <a href="{% url 'step_detail' c.step_id %}" target="_blank" rel="noopener" class="review-open">Open ↗</a>
+          </div>
+        {% empty %}
+          <p class="empty-note">Nothing waiting on you right now.</p>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="section-title">Meetup requests
+          {% if meetup_requests %}<span class="count-pill">{{ meetup_requests|length }} new</span>{% endif %}
+        </div>
+        {% for m in meetup_requests %}
+          <div class="meetup-item">
+            <div class="meetup-top">
+              <div class="meetup-name">{{ m.student.get_full_name|default:m.student.username }} <small style="color:var(--muted);font-weight:600;">{{ m.student.code }}</small></div>
+              <span class="status-tag status-requested">Requested</span>
+            </div>
+            {% if m.notes %}<div class="meetup-notes">"{{ m.notes }}"</div>{% endif %}
+            <form method="post" action="{% url 'respond_meetup' m.id %}">
+              {% csrf_token %}
+              <div class="schedule-form">
+                <input type="datetime-local" name="scheduled_time">
+                <input type="url" name="meeting_link" placeholder="Google Meet link (optional)">
+              </div>
+              <div class="meetup-actions">
+                <button type="submit" name="action" value="schedule" class="btn-primary">Schedule</button>
+                <button type="submit" name="action" value="decline" class="btn-ghost">Decline</button>
+              </div>
+            </form>
+          </div>
+        {% empty %}
+          <p class="empty-note">No pending requests.</p>
+        {% endfor %}
+
+        {% for m in scheduled_meetups %}
+          <div class="meetup-item">
+            <div class="meetup-top">
+              <div class="meetup-name">{{ m.student.get_full_name|default:m.student.username }} <small style="color:var(--muted);font-weight:600;">{{ m.student.code }}</small></div>
+              <span class="status-tag status-scheduled">Scheduled</span>
+            </div>
+            <div class="meetup-notes">Confirmed for {{ m.scheduled_time|date:"M j, g:i A" }}</div>
+            <a href="{{ m.join_link }}" target="_blank" rel="noopener" class="btn-meet">Start Google Meet</a>
+          </div>
+        {% endfor %}
+      </div>
+
+      <div class="card">
+        <div class="cal-head"><div class="cal-title">{{ cal_month_label }}</div></div>
+        <div class="cal-grid">
+          <div class="cal-dow">M</div><div class="cal-dow">T</div><div class="cal-dow">W</div>
+          <div class="cal-dow">T</div><div class="cal-dow">F</div><div class="cal-dow">S</div><div class="cal-dow">S</div>
+          {% for week in cal_weeks %}
+            {% for day in week %}
+              <div class="cal-cell {% if not day.in_month %}muted{% endif %} {% if day.is_today %}today{% endif %}">
+                {{ day.date.day }}
+                {% if day.events %}
+                  <div class="cal-dots">{% for ev in day.events %}<span class="cal-dot dot-{{ ev.kind }}"></span>{% endfor %}</div>
+                {% endif %}
+              </div>
+            {% endfor %}
+          {% endfor %}
+        </div>
+        <div class="cal-legend"><span><span class="cal-dot dot-meetup"></span> Scheduled meetup</span></div>
+      </div>
+    </div>
+  </div>
+{% endblock %}

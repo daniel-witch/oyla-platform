@@ -1,0 +1,56 @@
+{% extends "portal/base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Your saved data" %} — Oyla Platform{% endblock %}
+{% block extra_style %}{% include "datastore/_styles.html" %}{% endblock %}
+{% block content %}
+<div class="ds-page">
+  <div class="ds-head">
+    <div>
+      <h1>{% if is_staff_role %}{% translate "Students' saved data" %}{% else %}{% translate "Your saved data" %}{% endif %}</h1>
+      <p>{% if is_staff_role %}{% translate "Data saved by students in your classes and groups, plus your own." %}{% else %}{% translate "Everything you save here is stored safely in the Oyla database. Only you and your teachers can see it." %}{% endif %}</p>
+    </div>
+    <div class="ds-btns">
+      <a href="{% url 'data_new' %}" class="ds-btn primary">＋ {% translate "New" %}</a>
+      {% if is_staff_role %}<a href="{% url 'data_import_course' %}" class="ds-btn">⬆ {% translate "Import a course" %}</a>{% endif %}
+    </div>
+  </div>
+
+  <form method="get" class="ds-filters">
+    <input type="search" name="q" value="{{ search }}" placeholder="{% translate 'Search by title' %}{% if is_staff_role %}{% translate ' or student' %}{% endif %}…">
+    <select name="category" onchange="this.form.submit()">
+      <option value="">{% translate "All categories" %}</option>
+      {% for c in categories %}<option value="{{ c }}"{% if c == category %} selected{% endif %}>{{ c }}</option>{% endfor %}
+    </select>
+    <button class="ds-btn" type="submit">{% translate "Search" %}</button>
+  </form>
+
+  <div class="card" style="padding: 6px 14px;">
+    {% if records %}
+      <table class="ds-table">
+        <thead><tr>
+          <th>{% translate "Title" %}</th>
+          {% if is_staff_role %}<th>{% translate "Student" %}</th>{% endif %}
+          <th>{% translate "Category" %}</th><th>{% translate "Saved" %}</th>
+        </tr></thead>
+        <tbody>
+        {% for r in records %}
+          <tr>
+            <td><a class="title" href="{% url 'data_detail' r.pk %}">{{ r.title }}</a>
+              {% if r.teacher_comment %} <span class="pill comment">💬 {% translate "comment" %}</span>{% endif %}</td>
+            {% if is_staff_role %}<td>{{ r.created_by|default:"—" }}</td>{% endif %}
+            <td>{% if r.category %}<span class="pill">{{ r.category }}</span>{% else %}—{% endif %}</td>
+            <td>{{ r.updated_at|date:"d M Y, H:i" }}</td>
+          </tr>
+        {% endfor %}
+        </tbody>
+      </table>
+      <p class="meta" style="margin:10px 0 6px;">{% blocktranslate count counter=total %}{{ counter }} item{% plural %}{{ counter }} items{% endblocktranslate %}</p>
+    {% else %}
+      <div class="empty">
+        {% if search or category %}{% translate "Nothing matches your search." %}
+        {% else %}{% translate "Nothing saved yet. Press “New” to save your first piece of data!" %}{% endif %}
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

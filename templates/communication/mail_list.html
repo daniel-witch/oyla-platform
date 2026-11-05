@@ -1,0 +1,23 @@
+{% extends "portal/base.html" %}
+{% block title %}Mail — Oyla Platform{% endblock %}
+{% block extra_style %}{% include "communication/_mail_style.html" %}{% endblock %}
+{% block content %}
+  <div class="page-head"><h1>Mail</h1><p>Messages between students, teachers and coaches. Every message is also emailed to the recipient.</p></div>
+  <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-start;">
+    {% include "communication/_mail_tabs.html" %}
+    {% if box == 'inbox' %}
+      <form class="mail-search" method="get"><input type="text" name="q" value="{{ q }}" placeholder="Search inbox"><button class="btn" type="submit">Search</button></form>
+    {% endif %}
+  </div>
+  <div class="card" style="padding:0;">
+    {% for m in items %}
+      <a href="{% url 'mail_detail' m.id %}" class="mail-row {% if box == 'inbox' and not m.is_read %}unread{% endif %}">
+        <div class="who">{% if box == 'inbox' %}{{ m.sender.display_name }}{% else %}To: {{ m.recipient.display_name }}{% endif %}</div>
+        <div class="subj">{{ m.subject }} <span>— {{ m.body|truncatechars:70 }}</span></div>
+        <div class="when">{{ m.created_at|date:"j M, H:i" }}{% if box == 'sent' %}<br>{% if m.is_read %}Read{% else %}Unread{% endif %}{% endif %}</div>
+      </a>
+    {% empty %}
+      <p class="empty-note" style="padding:20px;">{% if box == 'inbox' %}Your inbox is empty.{% else %}You haven't sent any messages yet.{% endif %}</p>
+    {% endfor %}
+  </div>
+{% endblock %}

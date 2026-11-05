@@ -1,0 +1,11 @@
+{% extends "portal/base.html" %}
+{% block title %}Dashboard — Oyla Platform{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>Welcome, {{ user.first_name|default:user.username }}</h1>
+    <p>This account has no Student/Teacher/Coach role — likely an admin/superuser account.</p>
+  </div>
+  <div class="card">
+    <p style="margin:0;">Use the <a href="/admin/" style="color: var(--blue); font-weight:600;">admin panel</a> to manage the platform.</p>
+  </div>
+{% endblock %}

@@ -1,0 +1,25 @@
+{# Shared app-style look for the login / sign-up / verify screens. #}
+<style>
+  :root { --navy: #0f2a4a; --blue: #1a56db; --ink: #1a1f2b; --muted: #6b7280; --border: #e5e8ee; --bg: #f6f7fb; --red: #c62839; }
+  * { box-sizing: border-box; }
+  html body { margin: 0 !important; max-width: none !important; min-height: 100vh; background: var(--bg); color: var(--ink);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; padding: 28px 16px calc(28px + env(safe-area-inset-bottom)); }
+  .auth-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 20px; color: var(--navy); margin-bottom: 18px; }
+  .auth-brand img { width: 40px; height: 40px; border-radius: 10px; }
+  .auth-card, body > form { width: 100%; max-width: 400px; background: #fff; border: 1px solid var(--border); border-radius: 18px; padding: 26px 22px; }
+  h2 { font-size: 21px; margin: 0 0 6px; text-align: center; }
+  .auth-sub { color: var(--muted); font-size: 14.5px; text-align: center; margin: 0 0 18px; }
+  label { display: block; font-weight: 600; font-size: 14.5px; color: var(--ink); }
+  input[type=text], input[type=password], input[type=email], select {
+    width: 100%; font-size: 16px; font-family: inherit; padding: 12px 13px; margin-top: 6px; border: 1px solid var(--border); border-radius: 11px; background: #fff; }
+  input:focus, select:focus { outline: 2px solid #9ab8f5; border-color: var(--blue); }
+  form p { margin: 0 0 14px; }
+  button[type=submit] { width: 100%; font-weight: 700; font-size: 16px; font-family: inherit; background: var(--blue); color: #fff; border: 0; border-radius: 12px;
+    padding: 14px; min-height: 50px; cursor: pointer; margin-top: 4px; }
+  a { color: var(--blue); font-weight: 600; text-decoration: none; }
+  body > p { max-width: 400px; text-align: center; font-size: 14.5px; }
+  .auth-error { background: #fde8ea; color: var(--red); border-radius: 10px; padding: 10px 12px; font-size: 14px; margin: 0 0 14px; }
+  .install-row { text-align: center; margin-top: 16px; }
+  .install-row a { font-size: 14px; }
+</style>

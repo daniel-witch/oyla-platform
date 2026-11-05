@@ -1,0 +1,60 @@
+{% extends "portal/base.html" %}
+{% block title %}Review — {{ step.lesson.name }} — Oyla Platform{% endblock %}
+
+{% block extra_style %}
+<style>
+  .step-page { max-width: 760px; }
+  .crumb { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+  .crumb a { color: var(--blue); font-weight: 600; text-decoration: none; }
+  .step-page h1 { font-size: 20px; margin: 4px 0 10px; }
+  .player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #0b1424; border-radius: 12px;
+    overflow: hidden; margin-bottom: 18px; }
+  .player video, .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+  .step-preview { font-size: 14px; color: var(--muted); margin-bottom: 22px; line-height: 1.6; }
+  .submission-card { border: 1px solid var(--border); border-radius: 8px; padding: 14px; margin-bottom: 12px;
+    background: #fbfcfe; }
+  .sub-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+  .sub-name { font-weight: 700; font-size: 13.5px; }
+  .sub-answer { font-size: 14px; white-space: pre-wrap; margin-bottom: 10px; background: #fff;
+    border: 1px solid var(--border); border-radius: 6px; padding: 10px; color: var(--ink); }
+  .review-form { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .review-form input[type=text] { flex: 1; min-width: 160px; border: 1px solid var(--border); border-radius: 6px;
+    padding: 7px 9px; font-size: 12.5px; font-family: inherit; }
+  .status-pill { display: inline-block; font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 6px; }
+  .status-pending { background: var(--amber-light); color: var(--amber); }
+  .status-approved { background: var(--green-light); color: var(--green); }
+  .status-rejected { background: #fde8ea; color: #c62839; }
+</style>
+{% endblock %}
+
+
+{% block content %}
+  <div class="card step-page">
+    <div class="crumb">
+      <a href="{% url 'dashboard' %}">← Back to dashboard</a> ·
+      {{ step.lesson.module.name }} / {{ step.lesson.name }}
+    </div>
+    <h1>{{ step.display_name }} <span style="font-size:14px;color:var(--muted);font-weight:600;">· {{ step.get_step_type_display }}{% if needs_review %} submissions{% endif %}</span></h1>
+    {% include "portal/_step_player.html" %}
+    <div class="step-preview">{{ step.body|truncatewords:40 }}</div>
+
+    {% for c in submissions %}
+      <div class="submission-card">
+        <div class="sub-top">
+          <span class="sub-name">{{ c.student.get_full_name|default:c.student.username }} <small style="color:var(--muted);">{{ c.student.code }}</small></span>
+          <span class="status-pill status-{{ c.status }}">{{ c.get_status_display }}</span>
+        </div>
+        <div class="sub-answer">{{ c.answer|default:"(no answer submitted)" }}</div>
+        <form method="post" class="review-form">
+          {% csrf_token %}
+          <input type="hidden" name="completion_id" value="{{ c.id }}">
+          <input type="text" name="review_note" placeholder="Note (optional)" value="{{ c.review_note }}">
+          <button type="submit" name="action" value="approve" class="btn-primary">Approve</button>
+          <button type="submit" name="action" value="reject" class="btn-ghost">Needs revision</button>
+        </form>
+      </div>
+    {% empty %}
+      <p class="empty-note">{% if needs_review %}No submissions yet for this step.{% else %}Students mark this step complete themselves — no review needed.{% endif %}</p>
+    {% endfor %}
+  </div>
+{% endblock %}

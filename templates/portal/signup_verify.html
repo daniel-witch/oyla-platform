@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Verify your email — Oyla Platform</title>
+{% include "portal/_app_head.html" %}
+{% include "portal/_auth_style.html" %}
+</head>
+<body>
+  <div class="auth-brand"><img src="/static/portal/icons/icon-192.png" alt=""> Oyla Platform</div>
+  <h2>Enter your verification code</h2>
+  <p>We sent a 6-digit code to <strong>{{ email }}</strong>.</p>
+  {% if messages %}
+    {% for message in messages %}
+      <p style="color: {% if message.tags == 'error' %}red{% else %}#1a5c1a{% endif %};">{{ message }}</p>
+    {% endfor %}
+  {% endif %}
+  {% if error %}
+    <p style="color: red;">{{ error }}</p>
+  {% endif %}
+  <form method="post">
+    {% csrf_token %}
+    <p><label>Code<br>
+      <input type="text" name="code" maxlength="6" pattern="[0-9]{6}" required autofocus>
+    </label></p>
+    <button type="submit">Verify and create account</button>
+  </form>
+  <form method="post">
+    {% csrf_token %}
+    <button type="submit" name="resend" value="1" style="margin-top: 10px;">Resend code</button>
+  </form>
+  <p><a href="/signup/">Start over</a></p>
+</body>
+</html>

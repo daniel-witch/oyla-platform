@@ -1,0 +1,40 @@
+{% extends "portal/base.html" %}
+{% load i18n %}
+{% block title %}{{ record.title }} — Oyla Platform{% endblock %}
+{% block extra_style %}{% include "datastore/_styles.html" %}{% endblock %}
+{% block content %}
+<div class="ds-page">
+  <div class="ds-head">
+    <div>
+      <p><a href="{% url 'data_list' %}" style="color:var(--blue);font-weight:600;">← {% translate "Back to the list" %}</a></p>
+      <h1 style="margin-top:6px;">{{ record.title }}</h1>
+      <div class="meta">
+        {% if record.category %}<span class="pill">{{ record.category }}</span> · {% endif %}
+        {% translate "by" %} {{ record.created_by|default:"—" }} ·
+        {% translate "saved" %} {{ record.created_at|date:"d M Y, H:i" }}
+        {% if record.updated_at|date:"U" != record.created_at|date:"U" %} · {% translate "updated" %} {{ record.updated_at|date:"d M Y, H:i" }}{% endif %}
+      </div>
+    </div>
+    <div class="ds-btns">
+      {% if can_edit %}
+        <a href="{% url 'data_edit' record.pk %}" class="ds-btn">✏️ {% translate "Edit" %}</a>
+        <a href="{% url 'data_delete' record.pk %}" class="ds-btn ghost">🗑 {% translate "Delete" %}</a>
+      {% endif %}
+      <a href="{% url 'data_download' record.pk %}" class="ds-btn primary">⬇ {% translate "Download .json" %}</a>
+    </div>
+  </div>
+
+  <pre class="json">{{ pretty_json }}</pre>
+
+  {% if comment_form %}
+    <form method="post" class="card ds-form" style="margin-top:18px;">
+      {% csrf_token %}
+      <label for="id_teacher_comment">{% translate "Comment for the student" %}</label>
+      <textarea name="teacher_comment" id="id_teacher_comment" rows="3">{{ comment_form.teacher_comment.value|default_if_none:"" }}</textarea>
+      <div class="ds-btns" style="margin-top:10px;"><button type="submit" class="ds-btn primary">{% translate "Save comment" %}</button></div>
+    </form>
+  {% elif record.teacher_comment %}
+    <div class="comment-box"><h3>💬 {% translate "Your teacher's comment" %}</h3>{{ record.teacher_comment|linebreaksbr }}</div>
+  {% endif %}
+</div>
+{% endblock %}

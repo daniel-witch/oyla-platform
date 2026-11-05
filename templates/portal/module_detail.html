@@ -1,0 +1,101 @@
+{% extends "portal/base.html" %}
+{% block title %}{{ module.name }} — Oyla Platform{% endblock %}
+
+{% block extra_style %}
+<style>
+  .lesson-card { margin-bottom: 16px; }
+  .lesson-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; margin-bottom: 10px; }
+  .lesson-title { font-size: 16px; font-weight: 700; color: var(--navy); }
+  .lesson-count { font-size: 12.5px; color: var(--muted); }
+  .step-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border); margin-bottom: 8px; background: #fbfcfe; }
+  .step-row.approved { background: var(--green-light); border-color: #cdeedb; }
+  .step-row.pending { background: var(--amber-light); border-color: #f6e3b8; }
+  .step-row.rejected { background: var(--red-light); border-color: #f7c7cc; }
+  .step-check { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; display: flex; align-items: center; justify-content: center; border: 2px solid #cbd2e0; font-size: 12px; color: transparent; font-weight: 800; }
+  .step-row.approved .step-check { background: var(--green); border-color: var(--green); color: #fff; }
+  .step-row.pending .step-check { border-color: var(--amber); }
+  .tag { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; padding: 4px 8px; border-radius: 5px; width: 72px; text-align: center; flex-shrink: 0; }
+  .tag-video { background: #eaf1fd; color: #1a56db; } .tag-text { background: #f1eefd; color: #6d4dd6; }
+  .tag-quiz { background: var(--amber-light); color: var(--amber); } .tag-practice { background: #fde8ea; color: #c62839; }
+  .step-name { flex: 1; font-size: 15px; font-weight: 600; min-width: 0; }
+  .step-state { font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .st-approved { color: var(--green); } .st-pending { color: var(--amber); } .st-rejected { color: var(--red); }
+  .step-open { font-size: 12.5px; font-weight: 700; color: var(--blue); padding: 6px 12px; border-radius: 6px; border: 1px solid #cddcfb; background: #fff; flex-shrink: 0; }
+  .next-note { font-size: 13.5px; color: var(--muted); margin-top: 6px; }
+  @media (max-width: 760px) { .step-row { flex-wrap: wrap; } .step-name { flex-basis: calc(100% - 120px); } }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="crumbs">
+    <a href="{% url 'enrollments' %}">My Enrollments</a> /
+    <a href="{% url 'course_detail' course.id %}">{{ course.name }}</a> / {{ module.name }}
+  </div>
+  <div class="page-head">
+    <h1>{{ module.name }}</h1>
+    <p>
+      {% if module.state == 'current' %}This is your current module — every lesson in it is open.
+      {% else %}You finished this module. It stays open for review.{% endif %}
+    </p>
+  </div>
+
+  {% for lesson in lessons %}
+    <div class="card lesson-card">
+      <div class="lesson-head">
+        <div class="lesson-title">Lesson {{ forloop.counter }}. {{ lesson.name }}</div>
+        <div class="lesson-count">{{ lesson.done }} / {{ lesson.step_list|length }} done</div>
+      </div>
+      {% for s in lesson.step_list %}
+        <div class="step-row {{ s.my_status }}" data-step-id="{{ s.id }}">
+          <div class="step-check">✓</div>
+          <div class="tag tag-{{ s.step_type }}">{{ s.get_step_type_display }}</div>
+          <div class="step-name">{{ s.display_name }}</div>
+          <span class="step-state">
+            {% if s.my_status == 'approved' %}<span class="st-approved">✓ Completed</span>
+            {% elif s.my_status == 'pending' %}<span class="st-pending">⏳ Submitted</span>
+            {% elif s.my_status == 'rejected' %}<span class="st-rejected">✗ Needs revision</span>{% endif %}
+          </span>
+          <a href="{% url 'step_detail' s.id %}" target="_blank" rel="noopener" class="step-open">Open ↗</a>
+        </div>
+      {% empty %}
+        <p class="empty-note">No steps in this lesson yet.</p>
+      {% endfor %}
+    </div>
+  {% empty %}
+    <div class="card"><p class="empty-note">This module has no lessons yet.</p></div>
+  {% endfor %}
+
+  {% if next_module %}
+    <p class="next-note">
+      Next: <b>{{ next_module.name }}</b> —
+      {% if next_module.is_open %}<a href="{% url 'module_detail' next_module.id %}" style="color:var(--blue);font-weight:700;">open it →</a>
+      {% else %}🔒 unlocks when you finish every step above.{% endif %}
+    </p>
+  {% endif %}
+
+<script>
+// A step opened in another tab tells this page when it's completed.
+(function () {
+  var LABELS = {
+    approved: '<span class="st-approved">✓ Completed</span>',
+    pending: '<span class="st-pending">⏳ Submitted</span>',
+    rejected: '<span class="st-rejected">✗ Needs revision</span>'
+  };
+  function update(msg) {
+    if (!msg || !msg.stepId) return;
+    window._oylaChanged = true;
+    var row = document.querySelector('.step-row[data-step-id="' + msg.stepId + '"]');
+    if (!row || !msg.status) return;
+    row.classList.remove("approved", "pending", "rejected");
+    row.classList.add(msg.status);
+    row.querySelector(".step-state").innerHTML = LABELS[msg.status] || "";
+  }
+  if ("BroadcastChannel" in window) new BroadcastChannel("oyla-progress").onmessage = function (e) { update(e.data); };
+  window.addEventListener("storage", function (e) {
+    if (e.key === "oyla-progress" && e.newValue) { try { update(JSON.parse(e.newValue)); } catch (err) {} }
+  });
+  // Coming back to this tab: reload so unlocked modules / reviews show up.
+  document.addEventListener("visibilitychange", function () { if (!document.hidden && window._oylaChanged) location.reload(); });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+{% include "portal/_app_head.html" %}
+<title>{% block title %}Oyla Platform{% endblock %}</title>
+<style>
+  :root {
+    --navy: #0f2a4a; --blue: #1a56db; --blue-light: #eaf1fd;
+    --green: #1f9d55; --green-light: #e7f8ee;
+    --amber: #b7791f; --amber-light: #fdf3e2;
+    --red: #c62839; --red-light: #fde8ea;
+    --purple: #6d4dd6; --purple-light: #f1eefd;
+    --ink: #1a1f2b; --muted: #6b7280; --border: #e5e8ee; --bg: #f6f7fb;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--ink); }
+  a { color: inherit; text-decoration: none; }
+
+  .topbar { height: 64px; background: #fff; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 28px; gap: 14px; }
+  .topbar a.logo { text-decoration: none; }
+  .topbar .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--navy); }
+  .topbar .logo .mark { width: 30px; height: 30px; border-radius: 8px; background: linear-gradient(135deg, var(--blue), #4f83f1); display: flex; align-items: center; justify-content: center; color: #fff; font-size: 15px; font-weight: 800; }
+  .topbar .spacer { flex: 1; }
+  .topbar .role-pill { font-size: 12px; font-weight: 700; letter-spacing: .04em; padding: 5px 12px; border-radius: 999px; text-transform: uppercase; }
+  .role-pill.student { background: var(--blue-light); color: var(--blue); }
+  .role-pill.teacher { background: var(--purple-light); color: var(--purple); }
+  .role-pill.coach { background: var(--amber-light); color: var(--amber); }
+  .topbar .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; flex-shrink: 0; border: 2px solid transparent; cursor: pointer; padding: 0; overflow: hidden; font-family: inherit; }
+  .topbar .avatar:hover, .topbar .avatar[aria-expanded="true"] { border-color: var(--blue); }
+  .avatar img, .pp-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .mail-btn { position: relative; font-size: 18px; color: var(--navy); padding: 4px 6px; }
+  .mail-btn .badge, .nav-badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 800; border-radius: 999px; padding: 1px 6px; }
+  .mail-btn .badge { position: absolute; top: -4px; right: -8px; }
+  .nav-badge { margin-left: auto; }
+  .profile-wrap { position: relative; }
+  .profile-pop { position: absolute; right: 0; top: 46px; width: 320px; background: #fff; border: 1px solid var(--border); border-radius: 14px; box-shadow: 0 12px 32px rgba(15,42,74,.16); padding: 18px; z-index: 60; }
+  .pp-head { display: flex; gap: 14px; align-items: center; margin-bottom: 14px; }
+  .pp-photo { width: 64px; height: 64px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; font-weight: 800; overflow: hidden; flex-shrink: 0; }
+  .pp-name { font-size: 16px; font-weight: 700; }
+  .pp-role { font-size: 12px; color: var(--muted); text-transform: capitalize; }
+  .pp-id { font-size: 12.5px; margin-top: 4px; color: var(--navy); background: var(--blue-light); display: inline-block; padding: 2px 8px; border-radius: 6px; }
+  .pp-list { display: grid; grid-template-columns: 96px 1fr; gap: 6px 10px; font-size: 13px; margin: 0 0 14px; }
+  .pp-list dt { color: var(--muted); }
+  .pp-list dd { margin: 0; word-break: break-word; }
+  .pp-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pp-actions a { padding: 8px 12px; font-size: 12.5px; }
+
+  .shell { display: flex; min-height: calc(100vh - 64px); }
+  .sidebar { width: 230px; background: var(--navy); color: #cbd5e1; padding: 22px 14px; flex-shrink: 0; display: flex; flex-direction: column; }
+  .sidebar .nav-item { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border-radius: 8px; font-size: 14px; font-weight: 500; margin-bottom: 2px; color: #b7c3d9; cursor: pointer; border: none; background: none; width: 100%; text-align: left; font-family: inherit; }
+  .sidebar .nav-item .ico { width: 18px; height: 18px; border-radius: 4px; background: rgba(255,255,255,.15); flex-shrink: 0; }
+  .sidebar .nav-item.active { background: rgba(255,255,255,.1); color: #fff; }
+  .sidebar .nav-item.active .ico { background: #4f83f1; }
+  .sidebar hr { border: none; border-top: 1px solid rgba(255,255,255,.12); margin: 16px 4px; }
+
+  .main { flex: 1; padding: 28px 32px 60px; max-width: 1400px; }
+  .page-head { margin-bottom: 22px; }
+  .page-head h1 { font-size: 22px; margin: 0 0 4px; }
+  .page-head p { margin: 0; color: var(--muted); font-size: 14px; }
+
+  .messages { list-style: none; padding: 0; margin: 0 0 18px; }
+  .messages li { padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 8px; background: var(--blue-light); color: var(--blue); }
+  .messages li.error { background: var(--red-light); color: var(--red); }
+
+  .stat-row { display: grid; grid-template-columns: repeat(3, 1fr) 220px; gap: 16px; margin-bottom: 26px; }
+  .stat-row.four { grid-template-columns: repeat(4, 1fr); }
+  .card { background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .stat-card .label { font-size: 11px; font-weight: 700; letter-spacing: .06em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px; }
+  .stat-card .value { font-size: 30px; font-weight: 700; color: var(--ink); }
+  .stat-card .sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .stat-card.blue .value { color: var(--blue); }
+  .stat-card.green .value { color: var(--green); }
+  .stat-card.amber .value { color: var(--amber); }
+  .stat-card.purple .value { color: var(--purple); }
+
+  .ring-card { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring-card .ring-title { font-size: 13px; font-weight: 700; color: var(--ink); margin-bottom: 10px; align-self: flex-start; }
+  .ring { width: 110px; height: 110px; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+  .ring .hole { width: 78px; height: 78px; border-radius: 50%; background: #fff; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+  .ring .hole .pct { font-size: 20px; font-weight: 800; color: var(--navy); }
+  .ring .hole .pct-label { font-size: 9px; color: var(--muted); font-weight: 600; letter-spacing: .04em; }
+
+  .section-title { font-size: 16px; font-weight: 700; margin: 0 0 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .section-title .course-name { color: var(--blue); }
+  .section-title .count-pill { font-size: 11px; font-weight: 700; background: var(--red-light); color: var(--red); padding: 2px 9px; border-radius: 999px; }
+
+  .content-row { display: grid; grid-template-columns: 1fr 320px; gap: 20px; align-items: start; }
+  .side-col { display: flex; flex-direction: column; gap: 20px; }
+
+  .btn { font-size: 12px; font-weight: 700; color: var(--blue); padding: 6px 12px; border-radius: 6px; border: 1px solid #cddcfb; background: #fff; cursor: pointer; font-family: inherit; }
+  .btn-primary { font-size: 11.5px; font-weight: 700; color: #fff; background: var(--blue); padding: 6px 12px; border-radius: 6px; border: none; cursor: pointer; font-family: inherit; }
+  .btn-ghost { font-size: 11.5px; font-weight: 700; color: var(--muted); background: #fff; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border); cursor: pointer; font-family: inherit; }
+  .btn-meet { font-size: 11.5px; font-weight: 700; color: #fff; background: var(--green); padding: 6px 12px; border-radius: 6px; border: none; display: inline-flex; align-items: center; gap: 5px; }
+
+  /* Calendar board (shared by all 3 dashboards) */
+  .cal-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; }
+  .cal-head .cal-title { font-size: 15px; font-weight: 700; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+  .cal-dow { font-size: 10px; font-weight: 700; color: var(--muted); text-align: center; padding-bottom: 4px; text-transform: uppercase; }
+  .cal-cell { aspect-ratio: 1 / 1; border-radius: 8px; font-size: 12px; color: var(--ink); display: flex; flex-direction: column; align-items: center; justify-content: center; background: #fbfcfe; border: 1px solid var(--border); position: relative; }
+  .cal-cell.muted { color: #c3c9d4; background: transparent; border-color: transparent; }
+  .cal-cell.today { border: 2px solid var(--blue); font-weight: 700; }
+  .cal-dots { display: flex; gap: 3px; margin-top: 3px; }
+  .cal-dot { width: 5px; height: 5px; border-radius: 50%; }
+  .dot-live { background: var(--blue); }
+  .dot-meetup { background: #d6741f; }
+  .cal-legend { display: flex; gap: 16px; margin-top: 12px; font-size: 11.5px; color: var(--muted); }
+  .cal-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .cal-legend .cal-dot { width: 7px; height: 7px; }
+
+  .upcoming-title { font-size: 13px; font-weight: 700; margin-bottom: 12px; }
+  .upcoming-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); align-items: center; }
+  .upcoming-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .upcoming-date { width: 42px; flex-shrink: 0; text-align: center; border-radius: 8px; background: var(--blue-light); color: var(--blue); padding: 5px 0; }
+  .upcoming-date .d-num { font-size: 15px; font-weight: 800; line-height: 1; }
+  .upcoming-date .d-mon { font-size: 9px; font-weight: 700; text-transform: uppercase; }
+  .upcoming-item.meetup .upcoming-date { background: #fbe9db; color: #b45f14; }
+  .upcoming-info { flex: 1; }
+  .upcoming-info .u-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .upcoming-info .u-meta { font-size: 11.5px; color: var(--muted); }
+  .empty-note { font-size: 13px; color: var(--muted); padding: 6px 0; }
+  .sidebar a.nav-item { text-decoration: none; }
+  .crumbs { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .crumbs a { color: var(--blue); font-weight: 600; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-size: 12.5px; font-weight: 700; margin-bottom: 6px; color: var(--ink); }
+  .field input[type=text], .field input[type=email], .field input[type=date], .field input[type=number], .field select, .field textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: 14px; font-family: inherit; background: #fff; }
+  .field textarea { min-height: 120px; resize: vertical; }
+  .field .help { font-size: 12px; color: var(--muted); margin-top: 4px; }
+  .field .err { font-size: 12px; color: var(--red); margin-top: 4px; }
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 999px; }
+  .pill-green { background: var(--green-light); color: var(--green); }
+  .pill-amber { background: var(--amber-light); color: var(--amber); }
+  .pill-blue { background: var(--blue-light); color: var(--blue); }
+  .pill-gray { background: #eef0f5; color: var(--muted); }
+  .pill-red { background: var(--red-light); color: var(--red); }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 760px) { .grid-2 { grid-template-columns: 1fr; } .profile-pop { position: fixed; left: 12px; right: 12px; width: auto; top: 70px; } }
+
+  /* Phones & small tablets: sidebar becomes a top strip, grids stack. */
+  @media (max-width: 760px) {
+    .topbar { padding: 0 16px; }
+    .shell { flex-direction: column; }
+    .sidebar { width: 100%; flex-direction: row; flex-wrap: wrap; gap: 4px; padding: 10px 12px; }
+    .sidebar .nav-item { width: auto; margin: 0; padding: 9px 12px; }
+    .sidebar hr { display: none; }
+    .main { padding: 18px 16px 48px; }
+    .stat-row, .stat-row.four, .content-row { grid-template-columns: 1fr; }
+  }
+</style>
+{% block extra_style %}{% endblock %}
+</head>
+<body>
+
+<div class="topbar">
+  <a href="{% url 'dashboard' %}" class="logo"><div class="mark">O</div> Oyla Platform</a>
+  <div class="spacer"></div>
+  {% if user.is_authenticated %}
+  <a href="{% url 'mail_inbox' %}" class="mail-btn" title="Mail">✉{% if unread_mail %}<span class="badge">{{ unread_mail }}</span>{% endif %}</a>
+  <div class="role-pill {{ user.role }}">{{ user.role|default:"admin" }}</div>
+  <div class="profile-wrap">
+    <button type="button" class="avatar" id="avatar-btn" aria-haspopup="dialog" aria-expanded="false" title="Your profile">
+      {% if user.photo %}<img src="{{ user.photo.url }}" alt="">{% else %}{{ user.initials }}{% endif %}
+    </button>
+    <div class="profile-pop" id="profile-pop" role="dialog" aria-label="Your personal information" hidden>
+      <div class="pp-head">
+        <div class="pp-photo">{% if user.photo %}<img src="{{ user.photo.url }}" alt="">{% else %}{{ user.initials }}{% endif %}</div>
+        <div>
+          <div class="pp-name">{{ user.display_name }}</div>
+          <div class="pp-role">{{ user.get_role_display|default:"Administrator" }}</div>
+          {% if user.personal_id %}<div class="pp-id">{% if user.role == 'student' %}Student ID{% elif user.role == 'teacher' %}Teacher ID{% else %}Coach ID{% endif %}: <b>{{ user.personal_id }}</b></div>{% endif %}
+        </div>
+      </div>
+      <dl class="pp-list">
+        <dt>Username</dt><dd>{{ user.username }}</dd>
+        <dt>Email</dt><dd>{{ user.email|default:"—" }}</dd>
+        <dt>Phone</dt><dd>{{ user.phone_number|default:"—" }}</dd>
+        <dt>Birth date</dt><dd>{{ user.birth_date|date:"j M Y"|default:"—" }}</dd>
+        <dt>Gender</dt><dd>{{ user.gender|default:"—" }}</dd>
+        <dt>Address</dt><dd>{{ user.perm_address|default:"—" }}</dd>
+        <dt>Member since</dt><dd>{{ user.date_joined|date:"j M Y" }}</dd>
+      </dl>
+      <div class="pp-actions">
+        <a href="{% url 'profile' %}" class="btn-primary">Edit profile / photo</a>
+        <a href="{% url 'password_change' %}" class="btn-ghost">Change password</a>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+</div>
+
+<div class="shell">
+  <div class="sidebar">
+    {% block nav %}
+      {% for item in menu %}
+        <a href="{{ item.url }}" class="nav-item{% if item.active %} active{% endif %}"><span class="ico"></span> {{ item.label }}{% if item.key == 'mail_inbox' and unread_mail %}<span class="nav-badge">{{ unread_mail }}</span>{% endif %}</a>
+      {% endfor %}
+    {% endblock %}
+    {% if user.is_authenticated %}
+      <hr>
+      <a href="{% url 'data_list' %}" class="nav-item{% if nav_active == 'data' %} active{% endif %}"><span class="ico"></span> My data</a>
+      {% if user.role == 'teacher' or user.role == 'coach' or user.is_superuser %}
+        <a href="{% url 'data_import_course' %}" class="nav-item{% if nav_active == 'import' %} active{% endif %}"><span class="ico"></span> Import a course</a>
+      {% endif %}
+      {% if user.is_staff %}<a href="/admin/" class="nav-item"><span class="ico"></span> Admin panel</a>{% endif %}
+    {% endif %}
+    <a href="#" class="nav-item" data-install hidden><span class="ico"></span> Install app</a>
+    <hr>
+    <a href="{% url 'password_change' %}" class="nav-item"><span class="ico"></span> Change password</a>
+    <form method="post" action="{% url 'logout' %}" style="margin:0;">
+      {% csrf_token %}
+      <button type="submit" class="nav-item"><span class="ico"></span> Log out</button>
+    </form>
+  </div>
+
+  <div class="main">
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li class="{{ message.tags }}">{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+
+    {% block content %}{% endblock %}
+  </div>
+</div>
+
+{% include "portal/_install_hint.html" %}
+<script>
+(function () {
+  var btn = document.getElementById("avatar-btn"), pop = document.getElementById("profile-pop");
+  if (!btn) return;
+  function close() { pop.hidden = true; btn.setAttribute("aria-expanded", "false"); }
+  btn.addEventListener("click", function (e) {
+    e.stopPropagation();
+    pop.hidden = !pop.hidden;
+    btn.setAttribute("aria-expanded", pop.hidden ? "false" : "true");
+  });
+  pop.addEventListener("click", function (e) { e.stopPropagation(); });
+  document.addEventListener("click", close);
+  document.addEventListener("keydown", function (e) { if (e.key === "Escape") close(); });
+})();
+</script>
+</body>
+</html>

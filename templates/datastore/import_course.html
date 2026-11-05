@@ -1,0 +1,45 @@
+{% extends "portal/base.html" %}
+{% load i18n %}
+{% block title %}{% translate "Import a course" %} — Oyla Platform{% endblock %}
+{% block extra_style %}{% include "datastore/_styles.html" %}{% endblock %}
+{% block content %}
+<div class="ds-page">
+  <div class="ds-head">
+    <div>
+      <h1>{% translate "Import a course from JSON" %}</h1>
+      <p>{% translate "Creates the course with all its modules, lessons, steps and resources in one go. If anything is wrong, nothing is saved." %}</p>
+    </div>
+  </div>
+
+  {% if result %}
+    <div class="card" style="border-color:var(--green);margin-bottom:18px;">
+      <h3 style="margin:0 0 6px;color:var(--green);">✓ {% if result.created %}{% translate "Course created" %}{% else %}{% translate "Course updated" %}{% endif %} (id {{ result.course_id }})</h3>
+      <p style="margin:0;font-size:15px;">{% blocktranslate count counter=result.modules %}{{ counter }} module{% plural %}{{ counter }} modules{% endblocktranslate %} ·
+        {% blocktranslate count counter=result.lessons %}{{ counter }} lesson{% plural %}{{ counter }} lessons{% endblocktranslate %} ·
+        {% blocktranslate count counter=result.steps %}{{ counter }} step{% plural %}{{ counter }} steps{% endblocktranslate %} ·
+        {% blocktranslate count counter=result.resources %}{{ counter }} resource{% plural %}{{ counter }} resources{% endblocktranslate %}</p>
+      <p style="margin:8px 0 0;font-size:14px;"><a style="color:var(--blue);font-weight:600;" href="{% url 'data_detail' result.record_id %}">{% translate "See the saved original JSON" %}</a> ·
+        <a style="color:var(--blue);font-weight:600;" href="/api/courses/{{ result.course_id }}/export/">{% translate "Export this course as JSON" %}</a></p>
+    </div>
+  {% endif %}
+
+  {% if import_errors %}
+    <div class="card" style="border-color:var(--red);margin-bottom:18px;">
+      <h3 style="margin:0 0 6px;color:var(--red);">{% translate "Nothing was saved. Please fix these problems:" %}</h3>
+      <ul style="margin:0;padding-left:18px;font-size:15px;">{% for e in import_errors %}<li>{{ e }}</li>{% endfor %}</ul>
+    </div>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="card ds-form" novalidate>
+    {% csrf_token %}
+    {% translate "Course JSON" as box_label %}
+    {% include "datastore/_json_box.html" with label=box_label %}
+    <label style="font-weight:600;display:flex;gap:10px;align-items:center;">
+      <input type="checkbox" name="update_existing" style="width:20px;height:20px;"{% if form.update_existing.value %} checked{% endif %}>
+      {% translate "If a course with the same number already exists, replace its content" %}
+    </label>
+    <div class="ds-btns" style="margin-top:20px;"><button type="submit" class="ds-btn primary">⬆ {% translate "Import course" %}</button></div>
+  </form>
+</div>
+{% include "datastore/_json_tools.html" %}
+{% endblock %}

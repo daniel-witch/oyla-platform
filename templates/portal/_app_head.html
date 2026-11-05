@@ -1,0 +1,62 @@
+{# Web-app tags: makes Oyla installable (own icon, full screen) on phones and computers. #}
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="theme-color" content="#0f2a4a">
+<meta name="application-name" content="Oyla">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Oyla">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="apple-touch-icon" href="/static/portal/icons/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/static/portal/icons/favicon-32.png">
+<style>
+  .install-hint { display: none; position: fixed; left: 12px; right: 12px; bottom: 12px; z-index: 60; background: #0f2a4a;
+    color: #fff; border-radius: 14px; padding: 14px 16px; font: 500 14.5px/1.5 -apple-system, "Segoe UI", Roboto, sans-serif;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25); }
+  .install-hint b { font-weight: 700; }
+  .install-hint button { float: right; background: none; border: 0; color: #fff; font-size: 20px; line-height: 1; cursor: pointer; }
+  .install-hint.show { display: block; }
+  [data-install][hidden] { display: none !important; }
+</style>
+<script>
+(function () {
+  var standalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  document.documentElement.classList.toggle("is-app", standalone);
+
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", function () { navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch(function () {}); });
+  }
+
+  var deferred = null;
+  var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent) ||
+              (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  function showButtons() { document.querySelectorAll("[data-install]").forEach(function (b) { b.hidden = false; }); }
+
+  window.addEventListener("beforeinstallprompt", function (e) { e.preventDefault(); deferred = e; showButtons(); });
+  window.addEventListener("appinstalled", function () {
+    deferred = null;
+    document.querySelectorAll("[data-install]").forEach(function (b) { b.hidden = true; });
+  });
+
+  document.addEventListener("DOMContentLoaded", function () {
+    if (!standalone && isIOS) showButtons();       // iPhone: we show instructions instead
+    document.querySelectorAll("[data-install]").forEach(function (btn) {
+      btn.addEventListener("click", function (e) {
+        e.preventDefault();
+        if (deferred) { deferred.prompt(); deferred.userChoice.finally(function () { deferred = null; }); return; }
+        var hint = document.getElementById("install-hint");
+        if (hint) hint.classList.add("show");
+      });
+    });
+    var close = document.querySelector("#install-hint button");
+    if (close) close.addEventListener("click", function () { document.getElementById("install-hint").classList.remove("show"); });
+
+    // Inside the installed app, open our own pages in the app itself, not in a new browser tab.
+    if (standalone) {
+      document.querySelectorAll('a[target="_blank"]').forEach(function (a) {
+        if (a.origin === window.location.origin) a.removeAttribute("target");
+      });
+    }
+  });
+})();
+</script>

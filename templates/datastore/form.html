@@ -1,0 +1,44 @@
+{% extends "portal/base.html" %}
+{% load i18n %}
+{% block title %}{% if mode == "edit" %}{% translate "Edit" %}{% else %}{% translate "Save new data" %}{% endif %} — Oyla Platform{% endblock %}
+{% block extra_style %}{% include "datastore/_styles.html" %}{% endblock %}
+{% block content %}
+<div class="ds-page">
+  <div class="ds-head">
+    <div>
+      <h1>{% if mode == "edit" %}{% translate "Edit your data" %}{% else %}{% translate "Save new data" %}{% endif %}</h1>
+      <p><a href="{% url 'data_list' %}" style="color:var(--blue);font-weight:600;">← {% translate "Back to your saved data" %}</a></p>
+    </div>
+  </div>
+
+  {% if mode == "new" %}
+  <details class="help-box" open>
+    <summary>{% translate "What is JSON?" %}</summary>
+    <p>{% blocktranslate %}JSON is a simple way to write down information so that both people and computers can read it.
+    Information goes inside curly brackets { }, as pairs of a <b>name</b> and a <b>value</b>, separated by commas.
+    Names are always in "double quotes". Values can be text in quotes, numbers, true/false, or a list in square brackets [ ].{% endblocktranslate %}</p>
+    <pre>{"name": "Aruzhan", "grade": 10, "answers": ["B", "D", "A"]}</pre>
+  </details>
+  {% endif %}
+
+  <form method="post" enctype="multipart/form-data" class="card ds-form" novalidate>
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <label for="id_title">{% translate "Title" %}</label>
+    <input type="text" name="title" id="id_title" maxlength="255" value="{{ form.title.value|default_if_none:'' }}" placeholder="{% translate 'e.g. My quiz answers' %}" required>
+    {{ form.title.errors }}
+    <label for="id_category">{% translate "Category (optional)" %}</label>
+    <input type="text" name="category" id="id_category" maxlength="100" value="{{ form.category.value|default_if_none:'' }}" placeholder="{% translate 'e.g. quiz, survey, notes' %}">
+    {{ form.category.errors }}
+
+    {% translate "Your JSON" as box_label %}
+    {% include "datastore/_json_box.html" with label=box_label %}
+
+    <div class="ds-btns" style="margin-top:22px;">
+      <button type="submit" class="ds-btn primary">💾 {% if mode == "edit" %}{% translate "Save changes" %}{% else %}{% translate "Save" %}{% endif %}</button>
+      <a href="{% if record %}{% url 'data_detail' record.pk %}{% else %}{% url 'data_list' %}{% endif %}" class="ds-btn ghost">{% translate "Cancel" %}</a>
+    </div>
+  </form>
+</div>
+{% include "datastore/_json_tools.html" %}
+{% endblock %}

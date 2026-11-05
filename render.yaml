@@ -1,0 +1,28 @@
+# Render "Blueprint" - Render reads this file automatically when you
+# connect a repo and choose "New > Blueprint", and creates/configures the
+# service below for you. See the deployment instructions in README.md.
+#
+# This uses Render's free web service tier and SQLite (no paid database
+# needed), which is enough to run and demo the whole platform. The one
+# trade-off: a free instance's disk is not persistent, so the database
+# resets whenever the service redeploys or restarts after being idle.
+# That's fine for coursework/defense use; README.md explains how to
+# upgrade to a persistent Postgres database later if ever needed.
+services:
+  - type: web
+    name: eduplatform
+    runtime: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: PYTHON_VERSION
+        value: "3.12.7"
+      - key: EMAIL_BACKEND
+        value: "django.core.mail.backends.console.EmailBackend"
+      - key: WEB_CONCURRENCY
+        value: "2"

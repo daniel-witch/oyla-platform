@@ -1,0 +1,142 @@
+{% extends "portal/base.html" %}
+{% block title %}My Enrollments — Oyla Platform{% endblock %}
+
+{% block extra_style %}
+<style>
+  .course-card { display: block; border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; margin-bottom: 14px; background: #fff; transition: border-color .15s, box-shadow .15s; }
+  .course-card:hover { border-color: #b9cdf6; box-shadow: 0 4px 14px rgba(26,86,219,.08); }
+  .course-card:last-child { margin-bottom: 0; }
+  .cc-top { display: flex; justify-content: space-between; gap: 12px; align-items: flex-start; }
+  .cc-number { font-size: 11px; font-weight: 700; color: var(--blue); letter-spacing: .05em; text-transform: uppercase; }
+  .cc-name { font-size: 18px; font-weight: 700; margin: 2px 0 6px; color: var(--navy); }
+  .cc-meta { font-size: 13px; color: var(--muted); }
+  .cc-bar { height: 7px; border-radius: 4px; background: #eef0f5; overflow: hidden; margin: 14px 0 8px; }
+  .cc-bar span { display: block; height: 100%; background: var(--blue); }
+  .cc-foot { display: flex; justify-content: space-between; font-size: 12.5px; color: var(--muted); gap: 10px; flex-wrap: wrap; }
+  .cc-foot b { color: var(--ink); }
+  .cc-open { font-size: 13px; font-weight: 700; color: var(--blue); white-space: nowrap; }
+  .join-box form { display: flex; gap: 8px; }
+  .join-box input { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px 11px; font-size: 13px; font-family: inherit; min-width: 0; }
+  .join-box p { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+  .empty-state { text-align: center; padding: 36px 20px; }
+  .empty-state h3 { margin: 0 0 6px; }
+  .empty-state p { color: var(--muted); font-size: 14px; margin: 0; }
+  .meetup-form { display: flex; gap: 8px; margin-top: 14px; }
+  .meetup-form input { flex: 1; border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; font-size: 12.5px; font-family: inherit; min-width: 0; }
+</style>
+{% endblock %}
+
+{% block content %}
+  <div class="page-head">
+    <h1>My Enrollments</h1>
+    <p>Hi {{ user.first_name|default:user.username }} — choose a course, then a module, then a lesson.</p>
+  </div>
+
+  <div class="stat-row">
+    <div class="card stat-card blue">
+      <div class="label">Courses</div>
+      <div class="value">{{ courses|length }}</div>
+      <div class="sub">you are enrolled in</div>
+    </div>
+    <div class="card stat-card green">
+      <div class="label">Steps completed</div>
+      <div class="value">{{ total_done }}</div>
+      <div class="sub">out of {{ total_steps }}</div>
+    </div>
+    <div class="card stat-card">
+      <div class="label">Your Student ID</div>
+      <div class="value" style="font-size:22px;">{{ student.code }}</div>
+      <div class="sub">show it to your teacher</div>
+    </div>
+    <div class="card ring-card">
+      <div class="ring-title">Overall progress</div>
+      <div class="ring" style="background: conic-gradient(var(--blue) 0% {{ overall }}%, #e4e9f2 {{ overall }}% 100%);">
+        <div class="hole"><span class="pct">{{ overall }}%</span><span class="pct-label">COMPLETE</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="content-row">
+    <div class="card">
+      <div class="section-title"><span>Your courses</span></div>
+      {% for c in courses %}
+        <a href="{% url 'course_detail' c.id %}" class="course-card">
+          <div class="cc-top">
+            <div>
+              {% if c.number %}<div class="cc-number">{{ c.number }}</div>{% endif %}
+              <div class="cc-name">{{ c.name }}</div>
+              <div class="cc-meta">
+                {{ c.module_count }} module{{ c.module_count|pluralize }}
+                {% if c.group %} · {{ c.group.class_session.name }} · Teacher: {{ c.group.class_session.teacher.display_name }}{% if c.group.coach %} · Coach: {{ c.group.coach.display_name }}{% endif %}{% endif %}
+              </div>
+            </div>
+            <span class="cc-open">Open →</span>
+          </div>
+          <div class="cc-bar"><span style="width: {{ c.progress.percent }}%"></span></div>
+          <div class="cc-foot">
+            <span><b>{{ c.progress.approved }}</b> / {{ c.progress.total }} steps · {{ c.progress.percent }}%</span>
+            <span>{% if c.current_module %}Current module: <b>{{ c.current_module.name }}</b>{% elif c.module_count %}All modules finished 🎉{% endif %}</span>
+          </div>
+        </a>
+      {% empty %}
+        <div class="empty-state">
+          <h3>No courses yet</h3>
+          <p>You can join a class only with an invite link from your teacher or coach.<br>Paste it in the “Join a class” box.</p>
+        </div>
+      {% endfor %}
+    </div>
+
+    <div class="side-col">
+      <div class="card join-box">
+        <div class="upcoming-title">Join a class</div>
+        <p>Got an invite link from your teacher or coach? Paste it here.</p>
+        <form method="post" action="{% url 'join_by_code' %}">
+          {% csrf_token %}
+          <input type="text" name="code" placeholder="https://…/join/abc123 or abc123" required>
+          <button type="submit" class="btn-primary">Join</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="cal-head"><div class="cal-title">{{ cal_month_label }}</div></div>
+        <div class="cal-grid">
+          <div class="cal-dow">M</div><div class="cal-dow">T</div><div class="cal-dow">W</div>
+          <div class="cal-dow">T</div><div class="cal-dow">F</div><div class="cal-dow">S</div><div class="cal-dow">S</div>
+          {% for week in cal_weeks %}{% for day in week %}
+            <div class="cal-cell {% if not day.in_month %}muted{% endif %} {% if day.is_today %}today{% endif %}">
+              {{ day.date.day }}
+              {% if day.events %}<div class="cal-dots">{% for ev in day.events %}<span class="cal-dot dot-{{ ev.kind }}"></span>{% endfor %}</div>{% endif %}
+            </div>
+          {% endfor %}{% endfor %}
+        </div>
+        <div class="cal-legend">
+          <span><span class="cal-dot dot-live"></span> Live session</span>
+          <span><span class="cal-dot dot-meetup"></span> Coach meetup</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="upcoming-title">Upcoming</div>
+        {% for ev in upcoming %}
+          <div class="upcoming-item {{ ev.kind }}">
+            <div class="upcoming-date"><div class="d-num">{{ ev.when|date:"d" }}</div><div class="d-mon">{{ ev.when|date:"M" }}</div></div>
+            <div class="upcoming-info">
+              <div class="u-title">{{ ev.title }}</div>
+              <div class="u-meta">{{ ev.when|date:"D, g:i A" }} · {{ ev.meta }}</div>
+            </div>
+            <a href="{{ ev.link }}" target="_blank" rel="noopener" class="btn-meet">Join</a>
+          </div>
+        {% empty %}
+          <p class="empty-note">Nothing on the calendar yet.</p>
+        {% endfor %}
+        {% if has_coach %}
+          <form method="post" action="{% url 'request_meetup' %}" class="meetup-form">
+            {% csrf_token %}
+            <input type="text" name="notes" placeholder="Request a meetup with your coach…" maxlength="255">
+            <button type="submit" class="btn">Request</button>
+          </form>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+{% endblock %}

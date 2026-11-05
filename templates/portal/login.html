@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Log in — Oyla Platform</title>
+{% include "portal/_app_head.html" %}
+{% include "portal/_auth_style.html" %}
+</head>
+<body>
+  <div class="auth-brand"><img src="/static/portal/icons/icon-192.png" alt=""> Oyla Platform</div>
+  <div class="auth-card">
+    <h2>Welcome back</h2>
+    <p class="auth-sub">Log in as a student, teacher or coach</p>
+    {% if form.errors %}
+      <p class="auth-error">Wrong username or password. Try again.</p>
+    {% endif %}
+    <form method="post">
+      {% csrf_token %}
+      <p><label>Username<input type="text" name="username" autocomplete="username" autocapitalize="none" required></label></p>
+      <p><label>Password<input type="password" name="password" autocomplete="current-password" required></label></p>
+      <button type="submit">Log in</button>
+    </form>
+  </div>
+  <p><a href="/signup/">Don't have an account? Sign up</a></p>
+  <div class="install-row"><a href="#" data-install hidden>📲 Install the Oyla app</a></div>
+  {% include "portal/_install_hint.html" %}
+</body>
+</html>

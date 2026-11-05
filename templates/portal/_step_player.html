@@ -1,0 +1,14 @@
+    {# ---- Video plays inside the app: uploaded file first, otherwise embedded YouTube. No outside links. ---- #}
+    {% if step.video_file %}
+      <div class="player">
+        <video id="step-video" controls playsinline preload="metadata" controlslist="nodownload"
+               oncontextmenu="return false;" src="{% url 'step_video' step.id %}"></video>
+      </div>
+    {% elif step.youtube_id %}
+      <div class="player">
+        <iframe id="yt-player" title="Lesson video"
+          src="https://www.youtube-nocookie.com/embed/{{ step.youtube_id }}?rel=0&modestbranding=1&playsinline=1&enablejsapi=1&origin={{ request.scheme }}://{{ request.get_host }}"
+          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen"
+          referrerpolicy="strict-origin-when-cross-origin" allowfullscreen></iframe>
+      </div>
+    {% endif %}

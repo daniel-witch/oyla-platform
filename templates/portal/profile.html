@@ -1,0 +1,53 @@
+{% extends "portal/base.html" %}
+{% block title %}My profile — Oyla Platform{% endblock %}
+{% block extra_style %}
+<style>
+  .pf-photo { width: 120px; height: 120px; border-radius: 50%; background: var(--navy); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; font-weight: 800; overflow: hidden; margin-bottom: 12px; }
+  .pf-photo img { width: 100%; height: 100%; object-fit: cover; }
+  .pf-id { font-size: 14px; background: var(--blue-light); color: var(--navy); padding: 6px 12px; border-radius: 8px; display: inline-block; margin-top: 8px; }
+  .pf-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+  @media (max-width: 760px) { .pf-grid { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+{% block content %}
+  <div class="page-head"><h1>My profile</h1><p>This is what people see when they click your avatar.</p></div>
+  <div class="content-row">
+    <form method="post" enctype="multipart/form-data" class="card">
+      {% csrf_token %}
+      {% if form.non_field_errors %}<div class="field"><div class="err">{{ form.non_field_errors|join:" " }}</div></div>{% endif %}
+      <div class="field">
+        <label for="id_photo">Photo</label>
+        <input type="file" name="photo" id="id_photo" accept="image/*">
+        <div class="help">JPG or PNG, up to 3 MB.</div>
+        {% for e in form.photo.errors %}<div class="err">{{ e }}</div>{% endfor %}
+      </div>
+      <div class="pf-grid">
+        {% for f in form %}{% if f.name != 'photo' %}
+          <div class="field">
+            <label for="{{ f.id_for_label }}">{{ f.label }}</label>
+            {{ f }}
+            {% for e in f.errors %}<div class="err">{{ e }}</div>{% endfor %}
+          </div>
+        {% endif %}{% endfor %}
+      </div>
+      <button type="submit" class="btn-primary" style="padding:10px 18px;font-size:13px;">Save profile</button>
+    </form>
+
+    <div class="side-col">
+      <div class="card" style="text-align:center;">
+        <div class="pf-photo" style="margin:0 auto 12px;">{% if user.photo %}<img src="{{ user.photo.url }}" alt="Your photo">{% else %}{{ user.initials }}{% endif %}</div>
+        <div style="font-weight:700;font-size:17px;">{{ user.display_name }}</div>
+        <div style="color:var(--muted);font-size:13px;">@{{ user.username }} · {{ user.get_role_display|default:"Administrator" }}</div>
+        {% if user.personal_id %}<div class="pf-id">{% if user.role == 'student' %}Student ID{% elif user.role == 'teacher' %}Teacher ID{% else %}Coach ID{% endif %}: <b>{{ user.personal_id }}</b></div>{% endif %}
+        {% if user.photo %}
+          <form method="post" style="margin-top:12px;">{% csrf_token %}<button type="submit" name="remove_photo" value="1" class="btn-ghost">Remove photo</button></form>
+        {% endif %}
+      </div>
+      <div class="card">
+        <div class="upcoming-title">Password</div>
+        <p class="empty-note" style="margin-bottom:10px;">Change your password here. An admin can also reset it in the admin panel.</p>
+        <a href="{% url 'password_change' %}" class="btn">Change password</a>
+      </div>
+    </div>
+  </div>
+{% endblock %}

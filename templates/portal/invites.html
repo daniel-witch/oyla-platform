@@ -1,0 +1,83 @@
+{% extends "portal/base.html" %}
+{% block title %}Invite links — Oyla Platform{% endblock %}
+{% block extra_style %}
+<style>
+  .inv { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; }
+  .inv.off { background: #f7f8fb; }
+  .inv-top { display: flex; justify-content: space-between; gap: 10px; align-items: center; flex-wrap: wrap; }
+  .inv-name { font-weight: 700; font-size: 15px; }
+  .inv-meta { font-size: 12.5px; color: var(--muted); margin: 4px 0 10px; }
+  .inv-link { display: flex; gap: 8px; }
+  .inv-link input { flex: 1; min-width: 0; border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12.5px; font-family: ui-monospace, Menlo, monospace; background: #fbfcfe; }
+</style>
+{% endblock %}
+{% block content %}
+  <div class="page-head">
+    <h1>Invite links</h1>
+    <p>Students can only join a class through a link you create here. Send the link to your students.</p>
+  </div>
+  <div class="content-row">
+    <div class="card">
+      <div class="section-title">Your links</div>
+      {% for inv in invites %}
+        <div class="inv {% if not inv.is_usable %}off{% endif %}" id="invite-{{ inv.id }}">
+          <div class="inv-top">
+            <div class="inv-name">{{ inv.class_session.name }} <span style="color:var(--muted);font-weight:500;font-size:13px;">· {{ inv.class_session.course.name }}</span></div>
+            {% if inv.is_usable %}<span class="pill pill-green">Active</span>{% else %}<span class="pill pill-gray">{{ inv.problem|truncatewords:4 }}</span>{% endif %}
+          </div>
+          <div class="inv-meta">
+            Used {{ inv.uses }}{% if inv.max_uses %} / {{ inv.max_uses }}{% endif %} time{{ inv.uses|pluralize }}
+            · {% if inv.expires_at %}expires {{ inv.expires_at|date:"j M Y, H:i" }}{% else %}never expires{% endif %}
+            {% if inv.coach %} · coach: {{ inv.coach.display_name }}{% endif %}
+          </div>
+          <div class="inv-link">
+            <input type="text" readonly value="{{ inv.url }}" aria-label="Invite link">
+            <button type="button" class="btn copy-btn">Copy</button>
+            {% if inv.is_active %}
+            <form method="post" style="margin:0;">{% csrf_token %}<input type="hidden" name="action" value="deactivate"><input type="hidden" name="invite_id" value="{{ inv.id }}"><button type="submit" class="btn-ghost">Turn off</button></form>
+            {% endif %}
+          </div>
+        </div>
+      {% empty %}
+        <p class="empty-note">No invite links yet — create one on the right.</p>
+      {% endfor %}
+    </div>
+    <form method="post" class="card">
+      {% csrf_token %}
+      <input type="hidden" name="action" value="create">
+      <div class="section-title">New invite link</div>
+      {% if sessions %}
+        <div class="field"><label for="cs">Class session</label>
+          <select name="class_session" id="cs" required>
+            {% for s in sessions %}<option value="{{ s.id }}">{{ s.name }} — {{ s.course.name }}</option>{% endfor %}
+          </select></div>
+        {% if not is_coach %}
+        <div class="field"><label for="coach">Coach for students who join (optional)</label>
+          <select name="coach" id="coach"><option value="">— none —</option>
+            {% for c in coaches %}<option value="{{ c.id }}">{{ c.display_name }} ({{ c.code }})</option>{% endfor %}
+          </select></div>
+        {% else %}
+          <p class="empty-note" style="margin-bottom:12px;">Students who join with your link get you as their coach.</p>
+        {% endif %}
+        <div class="field"><label for="days">Valid for</label>
+          <select name="days" id="days"><option value="1">1 day</option><option value="7" selected>7 days</option><option value="30">30 days</option><option value="0">No expiry</option></select></div>
+        <div class="field"><label for="max">Max number of students (optional)</label>
+          <input type="number" min="1" name="max_uses" id="max" placeholder="Unlimited"></div>
+        <button type="submit" class="btn-primary" style="padding:10px 18px;font-size:13px;">Create link</button>
+      {% else %}
+        <p class="empty-note">You don't have any class sessions yet. An admin creates class sessions in the admin panel.</p>
+      {% endif %}
+    </form>
+  </div>
+<script>
+document.querySelectorAll(".copy-btn").forEach(function (b) {
+  b.addEventListener("click", function () {
+    var input = b.parentNode.querySelector("input[type=text]");
+    input.select();
+    (navigator.clipboard ? navigator.clipboard.writeText(input.value) : Promise.reject()).catch(function () { document.execCommand("copy"); });
+    b.textContent = "Copied ✓";
+    setTimeout(function () { b.textContent = "Copy"; }, 1500);
+  });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,221 @@
+{% extends "portal/base.html" %}
+{% block title %}{{ step.display_name }} — Oyla Platform{% endblock %}
+
+{% block extra_style %}
+<style>
+  .step-page { max-width: 860px; }
+  .crumb { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
+  .crumb a { color: var(--blue); font-weight: 600; text-decoration: none; }
+  .step-page h1 { font-size: 22px; margin: 4px 0 16px; }
+  .step-type-pill { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .04em; padding: 4px 10px; border-radius: 6px; margin-bottom: 14px; }
+  .type-video { background: #eaf1fd; color: #1a56db; }
+  .type-text { background: #f1eefd; color: #6d4dd6; }
+  .type-quiz { background: var(--amber-light); color: var(--amber); }
+  .type-practice { background: #fde8ea; color: #c62839; }
+  .step-content { font-size: 16px; line-height: 1.7; white-space: pre-wrap; margin-bottom: 20px; color: var(--ink); }
+  .open-link, .resource-link { display: inline-block; margin-bottom: 20px; font-weight: 700; color: var(--blue); text-decoration: none; }
+
+  /* In-app video player */
+  .player { position: relative; width: 100%; aspect-ratio: 16 / 9; background: #0b1424; border-radius: 12px;
+    overflow: hidden; margin-bottom: 18px; }
+  .player video, .player iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #000; }
+  .player-note { font-size: 13px; color: var(--muted); margin: -8px 0 18px; }
+
+  .answer-box textarea { width: 100%; min-height: 150px; border: 1px solid var(--border); border-radius: 8px;
+    padding: 12px; font-family: inherit; font-size: 15px; resize: vertical; }
+  .status-pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 6px 12px; border-radius: 6px; margin-bottom: 10px; }
+  .status-pending { background: var(--amber-light); color: var(--amber); }
+  .status-approved { background: var(--green-light); color: var(--green); }
+  .status-rejected { background: #fde8ea; color: #c62839; }
+  .review-note { font-size: 13px; color: var(--muted); margin: -4px 0 16px; }
+  .btn-big { font-size: 15px; padding: 12px 20px; border-radius: 10px; min-height: 44px; }
+  .btn-big.is-done { background: var(--green); }
+  .btn-big[disabled] { opacity: .85; cursor: default; }
+  .step-nav { display: flex; justify-content: space-between; gap: 10px; margin-top: 24px; flex-wrap: wrap; }
+  .step-nav a { padding: 9px 14px; font-size: 13px; }
+  .answer-box textarea[readonly] { background: #f7f8fb; }
+
+  .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--navy); color: #fff;
+    padding: 12px 18px; border-radius: 10px; font-size: 14.5px; font-weight: 600; opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s; z-index: 50; max-width: calc(100% - 32px); }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .toast.error { background: var(--red); }
+</style>
+{% endblock %}
+
+
+{% block content %}
+  <div class="card step-page" id="step-page" data-step-id="{{ step.id }}" data-needs-review="{{ needs_review|yesno:'1,0' }}">
+    <div class="crumb">
+      <a href="{% url 'module_detail' step.lesson.module_id %}">← {{ step.lesson.module.name }}</a> ·
+      {{ step.lesson.name }}
+    </div>
+    <span class="step-type-pill type-{{ step.step_type }}">{{ step.get_step_type_display }}</span>
+    <h1>{{ step.display_name }}</h1>
+
+    {% include "portal/_step_player.html" %}
+    {% if step.has_video and not needs_review %}
+      <p class="player-note">This step is marked complete automatically when the video ends.</p>
+    {% endif %}
+
+    <div class="step-content">{{ step.body }}</div>
+
+    {% if step.link and not step.youtube_id %}
+      <a href="{{ step.link }}" target="_blank" rel="noopener" class="open-link">↗ Open link</a><br>
+    {% endif %}
+    {% if step.resource.link and step.resource.link != step.link and not step.resource.youtube_id %}
+      <a href="{{ step.resource.link }}" target="_blank" rel="noopener" class="resource-link">
+        ↗ {{ step.resource.get_resource_type_display }} resource
+      </a><br>
+    {% endif %}
+
+    {% csrf_token %}
+    {% if needs_review %}
+      <div id="status-area">
+        {% if completion %}
+          <div class="status-pill status-{{ completion.status }}">
+            {% if completion.status == "pending" %}⏳ Pending review
+            {% elif completion.status == "approved" %}✓ Approved
+            {% else %}✗ Needs revision{% endif %}
+          </div><br>
+          {% if completion.review_note %}
+            <div class="review-note">Reviewer note: "{{ completion.review_note }}"</div>
+          {% endif %}
+        {% endif %}
+      </div>
+      {% if can_submit %}
+      <form method="post" class="answer-box" id="answer-form">
+        {% csrf_token %}
+        <textarea name="answer" placeholder="Type your answer here...">{{ completion.answer|default:"" }}</textarea>
+        <br><br>
+        <button type="submit" class="btn-primary btn-big" id="submit-btn">
+          {% if completion %}Resubmit for review{% else %}Submit for review{% endif %}
+        </button>
+      </form>
+      {% else %}
+        <div class="answer-box"><textarea readonly>{{ completion.answer }}</textarea></div>
+        <p class="review-note">Your answer is submitted and can't be changed or undone.</p>
+      {% endif %}
+    {% else %}
+      <form method="post" id="complete-form">
+        {% csrf_token %}
+        <input type="hidden" name="action" value="complete">
+        <button type="submit" class="btn-primary btn-big{% if completion %} is-done{% endif %}" id="complete-btn"{% if completion %} disabled{% endif %}>
+          {% if completion %}✓ Completed{% else %}Mark complete{% endif %}
+        </button>
+      </form>
+      {% if not completion %}<p class="review-note" style="margin-top:10px;">Once completed, a step can't be undone.</p>{% endif %}
+    {% endif %}
+    <div class="step-nav">
+      {% if prev_step %}<a href="{% url 'step_detail' prev_step.id %}" class="btn-ghost">← {{ prev_step.display_name }}</a>{% else %}<span></span>{% endif %}
+      {% if next_step %}<a href="{% url 'step_detail' next_step.id %}" class="btn-ghost">{{ next_step.display_name }} →</a>{% endif %}
+    </div>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  var page = document.getElementById("step-page");
+  var stepId = page.dataset.stepId;
+  var url = window.location.pathname;
+  var csrf = document.querySelector("input[name=csrfmiddlewaretoken]").value;
+  var toastEl = document.getElementById("toast");
+  var channel = ("BroadcastChannel" in window) ? new BroadcastChannel("oyla-progress") : null;
+
+  function toast(text, isError) {
+    toastEl.textContent = text;
+    toastEl.className = "toast show" + (isError ? " error" : "");
+    clearTimeout(toast._t);
+    toast._t = setTimeout(function () { toastEl.className = "toast"; }, 2600);
+  }
+
+  // Tell the dashboard (open in another tab) that something changed.
+  function announce(data) {
+    var msg = { stepId: stepId, status: data.status, progress: data.progress, at: Date.now() };
+    if (channel) channel.postMessage(msg);
+    try { localStorage.setItem("oyla-progress", JSON.stringify(msg)); } catch (e) {}
+  }
+
+  function save(formData) {
+    return fetch(url, {
+      method: "POST", body: formData, credentials: "same-origin",
+      headers: { "X-Requested-With": "fetch", "X-CSRFToken": csrf, "Accept": "application/json" }
+    }).then(function (r) {
+      return r.json().then(function (data) { data._ok = r.ok; return data; });
+    });
+  }
+
+  // ---- Video / text steps: Mark complete without reloading ----
+  var completeForm = document.getElementById("complete-form");
+  var completeBtn = document.getElementById("complete-btn");
+  function showDone(done) {
+    completeBtn.classList.toggle("is-done", done);
+    completeBtn.textContent = done ? "✓ Completed" : "Mark complete";
+  }
+  function sendComplete(action, silent) {
+    var fd = new FormData();
+    fd.append("action", action);
+    completeBtn.disabled = true;
+    return save(fd).then(function (data) {
+      completeBtn.disabled = data.status === "approved";   // no undo
+      showDone(data.status === "approved");
+      if (!silent || data.status === "approved") toast(data.message || "Saved");
+      announce(data);
+    }).catch(function () {
+      completeBtn.disabled = false;
+      toast("Couldn't save - check your internet connection and try again.", true);
+    });
+  }
+  if (completeForm) {
+    completeForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      if (!completeBtn.classList.contains("is-done")) sendComplete("complete");
+    });
+  }
+
+  // Auto-complete when the video finishes.
+  var autoDone = false;
+  function videoEnded() {
+    if (!completeForm || autoDone) return;
+    autoDone = true;
+    if (!completeBtn.classList.contains("is-done")) sendComplete("complete", true);
+  }
+  var video = document.getElementById("step-video");
+  if (video) video.addEventListener("ended", videoEnded);
+
+  var yt = document.getElementById("yt-player");
+  if (yt) {
+    window.onYouTubeIframeAPIReady = function () {
+      new YT.Player("yt-player", { events: { onStateChange: function (e) { if (e.data === 0) videoEnded(); } } });
+    };
+    var s = document.createElement("script");
+    s.src = "https://www.youtube.com/iframe_api";
+    document.head.appendChild(s);
+  }
+
+  // ---- Quiz / practice steps: submit answer without reloading ----
+  var answerForm = document.getElementById("answer-form");
+  if (answerForm) {
+    var submitBtn = document.getElementById("submit-btn");
+    var statusArea = document.getElementById("status-area");
+    answerForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      save(new FormData(answerForm)).then(function (data) {
+        submitBtn.disabled = false;
+        if (!data._ok) { toast(data.message || "Something went wrong.", true); return; }
+        statusArea.innerHTML = '<div class="status-pill status-pending">⏳ Pending review</div><br>';
+        answerForm.querySelector("textarea").readOnly = true;
+        submitBtn.remove();
+        toast(data.message);
+        announce(data);
+      }).catch(function () {
+        submitBtn.disabled = false;
+        toast("Couldn't send - check your internet connection and try again.", true);
+      });
+    });
+  }
+})();
+</script>
+{% endblock %}

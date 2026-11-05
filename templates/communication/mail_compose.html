@@ -1,0 +1,25 @@
+{% extends "portal/base.html" %}
+{% block title %}Compose — Mail — Oyla Platform{% endblock %}
+{% block extra_style %}{% include "communication/_mail_style.html" %}{% endblock %}
+{% block content %}
+  {% with box='' %}{% include "communication/_mail_tabs.html" %}{% endwith %}
+  <form method="post" class="card" style="max-width:760px;">
+    {% csrf_token %}
+    <div class="section-title">{% if parent %}Reply{% else %}New message{% endif %}</div>
+    {% if parent %}<input type="hidden" name="parent" value="{{ parent.id }}">{% endif %}
+    <div class="field"><label for="to">To</label>
+      <select name="to" id="to" required>
+        <option value="">Choose a person…</option>
+        {% regroup recipients by role as by_role %}
+        {% for grp in by_role %}
+          <optgroup label="{% if grp.grouper == 'student' %}Students{% elif grp.grouper == 'teacher' %}Teachers{% elif grp.grouper == 'coach' %}Coaches{% else %}Administrators{% endif %}">
+          {% for r in grp.list %}<option value="{{ r.id }}" {% if initial.to == r.id|stringformat:"s" %}selected{% endif %}>{{ r.display_name }}{% if r.personal_id %} ({{ r.personal_id }}){% else %} (@{{ r.username }}){% endif %}</option>{% endfor %}
+          </optgroup>
+        {% endfor %}
+      </select></div>
+    <div class="field"><label for="subject">Subject</label><input type="text" name="subject" id="subject" maxlength="200" value="{{ initial.subject }}" required></div>
+    <div class="field"><label for="body">Message</label><textarea name="body" id="body" rows="10" required>{{ initial.body }}</textarea>
+      <div class="help">A copy is also sent to the recipient's email address.</div></div>
+    <button type="submit" class="btn-primary" style="padding:10px 18px;font-size:13px;">Send</button>
+  </form>
+{% endblock %}

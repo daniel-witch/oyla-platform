@@ -1,0 +1,77 @@
+{% extends "portal/base.html" %}
+{% block title %}{{ course.name }} — Study Module — Oyla Platform{% endblock %}
+{% block extra_style %}
+<style>
+  .smp-head { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin: 16px 0 0; }
+  .smp-fact { background: #f7f9fd; border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .smp-fact .k { font-size: 11px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .05em; }
+  .smp-fact .v { font-size: 20px; font-weight: 800; color: var(--navy); margin-top: 4px; }
+  .smp-desc { font-size: 14.5px; line-height: 1.65; white-space: pre-wrap; margin: 0; }
+  table.smp { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  table.smp th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 8px 10px; border-bottom: 2px solid var(--border); }
+  table.smp td { padding: 9px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  table.smp tr.mod td { background: var(--blue-light); font-weight: 700; color: var(--navy); }
+  table.smp td.num { text-align: center; width: 70px; }
+  .smp-wrap { overflow-x: auto; }
+  @media (max-width: 760px) { .smp-head { grid-template-columns: 1fr 1fr; } }
+</style>
+{% endblock %}
+{% block content %}
+  <div class="crumbs"><a href="{% url 'study_module' %}">Study Module</a> / {{ course.name }}</div>
+  <div class="card" style="margin-bottom:20px;">
+    {% if course.number %}<div class="pill pill-blue">{{ course.number }}</div>{% endif %}
+    <h1 style="font-size:22px;margin:8px 0 10px;">{{ course.name }}</h1>
+    {% if course.description %}<p class="smp-desc">{{ course.description }}</p>{% endif %}
+    <div class="smp-head">
+      <div class="smp-fact"><div class="k">Modules</div><div class="v">{{ modules|length }}</div></div>
+      <div class="smp-fact"><div class="k">Lessons</div><div class="v">{{ lesson_count }}</div></div>
+      <div class="smp-fact"><div class="k">Steps</div><div class="v">{{ total_steps }}</div></div>
+      <div class="smp-fact"><div class="k">Assessed (quiz + practice)</div><div class="v">{{ totals.quiz|add:totals.practice }}</div></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:20px;">
+    <div class="section-title"><span>Programme structure</span>
+      {% if user.role == 'student' %}<a class="btn" href="{% url 'course_detail' course.id %}">Go to my course →</a>{% endif %}
+    </div>
+    <div class="smp-wrap">
+    <table class="smp">
+      <thead><tr><th>Module / lesson</th><th class="num">Video</th><th class="num">Text</th><th class="num">Quiz</th><th class="num">Practice</th></tr></thead>
+      <tbody>
+      {% for m in modules %}
+        <tr class="mod"><td colspan="5">Module {{ forloop.counter }}. {{ m.name }}
+          {% if m.state == 'current' %}<span class="pill pill-blue">Current</span>{% elif m.state == 'completed' %}<span class="pill pill-green">Finished</span>{% elif m.state == 'locked' %}<span class="pill pill-gray">Locked</span>{% endif %}
+          {% if m.description %}<div style="font-weight:400;font-size:12.5px;color:var(--muted);margin-top:3px;">{{ m.description }}</div>{% endif %}
+        </td></tr>
+        {% for l in m.lessons.all %}
+          <tr><td>{{ forloop.parentloop.counter }}.{{ forloop.counter }} {{ l.name }}</td>
+            <td class="num">{{ l.counts.video|default:"–" }}</td><td class="num">{{ l.counts.text|default:"–" }}</td>
+            <td class="num">{{ l.counts.quiz|default:"–" }}</td><td class="num">{{ l.counts.practice|default:"–" }}</td></tr>
+        {% endfor %}
+      {% empty %}
+        <tr><td colspan="5" class="empty-note">No modules yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="section-title">How you are assessed</div>
+      <ul style="font-size:14px;line-height:1.7;margin:0;padding-left:18px;">
+        <li>Video and text steps: completed by the student (videos complete automatically when they end).</li>
+        <li>Quiz and practice steps: the answer is reviewed by a teacher or coach (approved / needs revision).</li>
+        <li>Modules open one at a time; the next module unlocks when the current one is finished.</li>
+        <li>Completed steps can't be undone.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="section-title">Class sessions</div>
+      {% for s in sessions %}
+        <div class="upcoming-item"><div class="upcoming-info"><div class="u-title">{{ s.name }}</div>
+          <div class="u-meta">{{ s.start_date|date:"j M Y" }}{% if s.finish_date %} – {{ s.finish_date|date:"j M Y" }}{% endif %} · Teacher: {{ s.teacher.display_name }} ({{ s.teacher.code }})</div></div></div>
+      {% empty %}<p class="empty-note">No class sessions yet.</p>{% endfor %}
+    </div>
+  </div>
+{% endblock %}

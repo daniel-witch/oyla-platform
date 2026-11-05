@@ -1,0 +1,5 @@
+Django==5.2.17
+djangorestframework==3.18.1
+gunicorn==23.0.0
+whitenoise==6.8.2
+Pillow==11.3.0

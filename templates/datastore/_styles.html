@@ -1,0 +1,48 @@
+<style>
+  .ds-page { max-width: 980px; }
+  .ds-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+  .ds-head h1 { font-size: 24px; margin: 0 0 4px; }
+  .ds-head p { margin: 0; color: var(--muted); font-size: 15px; }
+  .ds-btn { display: inline-flex; align-items: center; gap: 6px; font-size: 15px; font-weight: 700; padding: 11px 18px;
+    border-radius: 10px; border: 1px solid #cddcfb; background: #fff; color: var(--blue); cursor: pointer; font-family: inherit; min-height: 44px; }
+  .ds-btn.primary { background: var(--blue); color: #fff; border-color: var(--blue); }
+  .ds-btn.danger { background: var(--red); color: #fff; border-color: var(--red); }
+  .ds-btn.ghost { color: var(--muted); border-color: var(--border); }
+  .ds-btns { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .ds-filters { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .ds-filters input, .ds-filters select { font-size: 15px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 10px;
+    font-family: inherit; min-height: 44px; background: #fff; }
+  .ds-filters input[type=search] { flex: 1; min-width: 180px; }
+  table.ds-table { width: 100%; border-collapse: collapse; font-size: 15px; }
+  .ds-table th { text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 8px 10px; border-bottom: 1px solid var(--border); }
+  .ds-table td { padding: 12px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .ds-table a.title { color: var(--blue); font-weight: 700; }
+  .pill { display: inline-block; font-size: 12px; font-weight: 700; padding: 3px 10px; border-radius: 999px; background: var(--purple-light); color: var(--purple); }
+  .pill.comment { background: var(--green-light); color: var(--green); }
+  .ds-form label { display: block; font-weight: 700; font-size: 15px; margin: 16px 0 6px; }
+  .ds-form input[type=text], .ds-form textarea { width: 100%; font-size: 16px; padding: 11px 12px; border: 1px solid var(--border); border-radius: 10px; font-family: inherit; }
+  .ds-form textarea#json-box, pre.json { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 14.5px; line-height: 1.55; }
+  .ds-form textarea#json-box { min-height: 280px; tab-size: 2; }
+  .ds-form textarea#json-box.bad { border: 2px solid var(--red); }
+  .ds-form textarea#json-box.good { border: 2px solid var(--green); }
+  .errorlist { list-style: none; padding: 0; margin: 6px 0 0; color: var(--red); font-weight: 600; font-size: 14.5px; }
+  .check-msg { margin-top: 8px; font-size: 14.5px; font-weight: 600; min-height: 20px; }
+  .check-msg.bad { color: var(--red); } .check-msg.good { color: var(--green); }
+  .err-snippet { margin-top: 8px; background: var(--red-light); border-radius: 8px; padding: 10px 12px; font-family: ui-monospace, Menlo, monospace; font-size: 14px; overflow-x: auto; white-space: pre; }
+  .err-snippet .caret { color: var(--red); font-weight: 800; }
+  .help-box { background: var(--blue-light); border-radius: 12px; padding: 14px 16px; font-size: 14.5px; line-height: 1.6; color: var(--navy); margin-bottom: 6px; }
+  .help-box summary { font-weight: 700; cursor: pointer; font-size: 15px; }
+  .help-box code, .help-box pre { font-family: ui-monospace, Menlo, monospace; font-size: 13.5px; }
+  .help-box pre { background: #fff; border-radius: 8px; padding: 10px; overflow-x: auto; }
+  pre.json { background: #0f1b2d; color: #e3ecff; padding: 16px; border-radius: 12px; overflow: auto; max-height: 560px; white-space: pre; }
+  .meta { color: var(--muted); font-size: 14px; margin-bottom: 14px; }
+  .comment-box { background: var(--green-light); border-radius: 12px; padding: 14px 16px; margin-top: 18px; font-size: 15px; }
+  .comment-box h3 { margin: 0 0 6px; font-size: 15px; color: var(--green); }
+  .empty { text-align: center; padding: 34px 10px; color: var(--muted); font-size: 15px; }
+  @media (max-width: 760px) {
+    .ds-table thead { display: none; }
+    .ds-table tr { display: block; border-bottom: 1px solid var(--border); padding: 8px 0; }
+    .ds-table td { display: block; border: none; padding: 3px 4px; }
+    .ds-btn { flex: 1 1 auto; justify-content: center; }
+  }
+</style>
