@@ -26,7 +26,8 @@ def can_view_step(user, step):
     if role in ("teacher", "coach"):
         return True
     if role == "student":
-        return user.student.enrolled_course_id == step.lesson.module.course_id
+        # any course the student is in: the enrolled course or a class they joined
+        return step.lesson.module.course_id in user.student.course_ids()
     return False
 
 

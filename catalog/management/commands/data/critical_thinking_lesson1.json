@@ -1,0 +1,55 @@
+{
+  "course": {
+    "name": "Critical Thinking Crash Course",
+    "number": "OYLA-CT102",
+    "description": "From passive learner to active thinker. Learn to question claims, check evidence and make better decisions."
+  },
+  "class_session": {
+    "name": "Critical Thinking Crash Course — all students",
+    "description": "Every student is enrolled in this class automatically."
+  },
+  "module": {
+    "name": "Module 1 · Learning to question",
+    "description": "What critical thinking is, and the 4 questions a critical thinker asks.",
+    "order": 1
+  },
+  "lesson": {
+    "name": "Lesson 1 · What is critical thinking?",
+    "description": "A 1-minute video, a short story, a practice case and a summary quiz.",
+    "order": 1
+  },
+  "steps": [
+    {
+      "order": 1,
+      "title": "Step 1 · Video: What is critical thinking?",
+      "step_type": "quiz",
+      "video": "ct_lesson1_step1_what_is_critical_thinking.mp4",
+      "answer_key": "1-A, 2-D, 3-C",
+      "body": "Watch the video, then answer the 3 questions.\nWrite your answers like this: 1-A, 2-B, 3-C\n\nQuestion 1. What is critical thinking?\nA) Careful, reasonable thinking about what to believe and what to do\nB) Doubting everything you hear from people because you are afraid of them\nC) Memorising as many facts as possible\nD) Pointing out other people's mistakes\n\nQuestion 2. Which of these is part of critical thinking?\nA) Being negative about every new idea\nB) Believing something because everyone else does\nC) Never asking questions\nD) Changing your mind when the evidence changes\n\nQuestion 3. A friend shares a post: \"This drink makes you smarter!\" Which question would a critical thinker ask?\nA) How many people liked the post?\nB) What colour is the drink?\nC) What is the evidence?\nD) Is my friend popular?"
+    },
+    {
+      "order": 2,
+      "title": "Step 2 · Read: The Viral Message",
+      "step_type": "quiz",
+      "video": "",
+      "answer_key": "1-D, 2-A, 3-C",
+      "body": "Read the story, then answer the 3 questions.\nWrite your answers like this: 1-A, 2-B, 3-C\n\nTHE VIRAL MESSAGE\n\nOn Monday evening, Aruzhan's class group chat suddenly became very busy. Her classmate Timur posted a screenshot:\n\n\"URGENT!!! Tomorrow's maths test is cancelled because the teacher is sick. Share with everyone!\"\n\nIn a few minutes, twenty people replied with happy emojis. Some said they would stop studying and play games instead. One friend wrote, \"If Timur says so, it must be true.\"\n\nAruzhan wanted to believe it too. She was tired, and the test was difficult. But she stopped and thought for a moment.\n\nFirst, she asked herself: What exactly is being claimed? The message said the test was cancelled — but it didn't say who cancelled it.\n\nNext: What is the evidence? It was only a screenshot. There was no name, no date, and no message from the teacher or the school.\n\nThen: Who says so, and why? Timur didn't write the message himself — he only forwarded it. When Aruzhan asked him where it came from, he replied, \"I don't know, someone sent it to me.\"\n\nFinally: What else could explain it? Maybe it was an old message from last year. Maybe someone was joking.\n\nAruzhan opened the school's official website and checked the class page. There was no announcement. The test was still on the schedule. She wrote in the chat: \"I checked the school website — the test is still on. Let's not stop studying just because of a screenshot.\"\n\nThe next morning, the teacher walked into the class with the test papers. Several students looked shocked. Aruzhan felt calm — she was ready.\n\nShe didn't have to be negative or rude to anyone. She simply asked: \"How do I know this?\"\n\n—\n\nQuestion 1. What did Aruzhan do first when she saw the message?\nA) She shared it with her friends\nB) She stopped studying immediately and started playing games\nC) She ignored the message completely\nD) She stopped and asked what exactly was being claimed\n\nQuestion 2. Why was the screenshot weak evidence?\nA) It had no name, no date and no official source\nB) It had too many emojis\nC) It was sent in the evening\nD) Timur forwarded it late at night, when people are tired\n\nQuestion 3. Which action best shows critical thinking in the story?\nA) Believing the message because Timur shared it with his classmates\nB) Telling Timur he is a liar\nC) Checking the school's official website before deciding\nD) Waiting to see what most classmates do"
+    },
+    {
+      "order": 3,
+      "title": "Step 3 · Practice: Dana and the miracle app",
+      "step_type": "practice",
+      "video": "ct_lesson1_step3_practice_dana.mp4",
+      "answer_key": "1-B, 2-D, 3-A",
+      "body": "Watch Dana's story, then answer the 3 questions.\nWrite your answers like this: 1-A, 2-B, 3-C\n\nQuestion 1. Who is making the claim in the ad?\nA) Dana's English teacher\nB) The app company that wants to sell the app\nC) Independent scientists\nD) One million users who are using the app worldwide\n\nQuestion 2. Why is \"1,000,000 happy users\" weak evidence?\nA) The number is too small\nB) It is written in many different languages\nC) Happy users never write reviews\nD) It's just a number from the company, with no study or real reviews to check\n\nQuestion 3. What is the best thing for Dana to do next?\nA) Look for independent reviews or ask her teacher before deciding\nB) Buy the app quickly before the discount ends, because the normal price is too expensive\nC) Ask friends to buy it first\nD) Decide the app is useless without checking"
+    },
+    {
+      "order": 4,
+      "title": "Step 4 · Summary quiz",
+      "step_type": "quiz",
+      "video": "",
+      "answer_key": "1-B, 2-D, 3-C",
+      "body": "3 questions about the whole lesson.\nWrite your answers like this: 1-A, 2-B, 3-C\n\nQuestion 1. Which list shows the 4 questions a critical thinker asks?\nA) Who is popular? What is trending? How many likes? Is it new?\nB) What is claimed? What is the evidence? Who says so, and why? What else could explain it?\nC) Is it funny? Is it short? Do my friends agree? Is it on TikTok?\nD) Who is wrong? Who made a mistake? Who should be blamed? Who is lying?\n\nQuestion 2. Aruzhan saw a screenshot and Dana saw an ad. What did they both do that shows critical thinking?\nA) They believed the message because many other people believed it too\nB) They ignored all messages and ads because nothing online is ever true\nC) They acted quickly so they would not miss something important\nD) They stopped, asked \"How do I know this?\" and checked before deciding\n\nQuestion 3. A YouTuber says: \"Doctors hate this! One fruit cures every illness — buy my book to learn which one!\" Which answer shows the best critical thinking?\nA) Buy the book, because the YouTuber has many subscribers and seems confident\nB) Share the video with family, because health information is always useful\nC) Ask what the evidence is, and notice that the YouTuber earns money if you believe them\nD) Decide that all YouTubers are liars and never watch any videos again"
+    }
+  ]
+}

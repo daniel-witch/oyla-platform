@@ -13,3 +13,7 @@ python manage.py collectstatic --no-input
 # Applies any pending migrations so the live database schema is always
 # up to date with the code being deployed.
 python manage.py migrate
+
+# Adds the Critical Thinking Crash Course (Module 1, Lesson 1) and enrols every
+# student. Safe to run on every deploy: it never duplicates anything.
+python manage.py add_critical_thinking_course
