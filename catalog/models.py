@@ -116,6 +116,19 @@ class Step(models.Model):
     def has_video(self):
         return bool(self.video_file) or bool(self.youtube_id)
 
+    @property
+    def mcq(self):
+        """The multiple-choice questions of this step (questions in its text + answer key in its
+        Resource), or None if it has none. Any step type can have them. See catalog/mcq.py."""
+        if not hasattr(self, "_mcq"):
+            from .mcq import parse_mcq
+            try:
+                key = self.resource.body
+            except Exception:   # no resource
+                key = ""
+            self._mcq = parse_mcq(self.body, key) if key else None
+        return self._mcq
+
 
 class Resource(models.Model):
     class ResourceType(models.TextChoices):

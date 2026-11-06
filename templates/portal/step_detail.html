@@ -36,6 +36,32 @@
   .step-nav a { padding: 9px 14px; font-size: 13px; }
   .answer-box textarea[readonly] { background: #f7f8fb; }
 
+  /* Multiple-choice questions */
+  .mcq-q { border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; margin-bottom: 14px; background: #fff; }
+  .mcq-q h3 { font-size: 16px; margin: 0 0 12px; line-height: 1.45; }
+  .mcq-q h3 .qn { color: var(--muted); font-weight: 700; margin-right: 4px; }
+  .mcq-opt { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--border);
+    border-radius: 9px; margin-bottom: 8px; cursor: pointer; font-size: 15px; line-height: 1.45; }
+  .mcq-opt:hover { border-color: var(--blue); }
+  .mcq-opt input { margin-top: 3px; accent-color: var(--blue); }
+  .mcq-opt:has(input:checked) { border-color: var(--blue); background: #eaf1fd; }
+  .mcq-opt .letter { font-weight: 700; min-width: 18px; }
+  .mcq-q.is-right { border-color: var(--green); }
+  .mcq-q.is-wrong { border-color: #c62839; }
+  .mcq-mark { float: right; font-size: 13px; font-weight: 700; }
+  .is-right .mcq-mark { color: var(--green); }
+  .is-wrong .mcq-mark { color: #c62839; }
+  .mcq-opt.result { cursor: default; }
+  .mcq-opt.result:hover { border-color: var(--border); }
+  .mcq-opt.correct { border-color: var(--green); background: var(--green-light); }
+  .mcq-opt.chosen-wrong { border-color: #c62839; background: #fde8ea; }
+  .mcq-opt .tag { margin-left: auto; font-size: 12px; font-weight: 700; white-space: nowrap; }
+  .mcq-opt.correct .tag { color: var(--green); }
+  .mcq-opt.chosen-wrong .tag { color: #c62839; }
+  .score-pill { display: inline-block; font-size: 15px; font-weight: 700; padding: 8px 14px; border-radius: 8px;
+    margin-bottom: 14px; background: var(--green-light); color: var(--green); }
+  .score-pill.low { background: var(--amber-light); color: var(--amber); }
+
   .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); background: var(--navy); color: #fff;
     padding: 12px 18px; border-radius: 10px; font-size: 14.5px; font-weight: 600; opacity: 0; pointer-events: none;
     transition: opacity .2s, transform .2s; z-index: 50; max-width: calc(100% - 32px); }
@@ -59,7 +85,11 @@
       <p class="player-note">This step is marked complete automatically when the video ends.</p>
     {% endif %}
 
-    <div class="step-content">{{ step.body }}</div>
+    {% if mcq %}
+      {% if mcq.intro %}<div class="step-content">{{ mcq.intro }}</div>{% endif %}
+    {% else %}
+      <div class="step-content">{{ step.body }}</div>
+    {% endif %}
 
     {% if step.link and not step.youtube_id %}
       <a href="{{ step.link }}" target="_blank" rel="noopener" class="open-link">↗ Open link</a><br>
@@ -71,7 +101,47 @@
     {% endif %}
 
     {% csrf_token %}
-    {% if needs_review %}
+    {% if mcq %}
+      {% if mcq_results and not can_submit %}
+        <div class="score-pill{% if mcq_score|add:mcq_score < mcq_total %} low{% endif %}">Your score: {{ mcq_score }} of {{ mcq_total }} correct</div>
+        {% for q in mcq_results %}
+          <div class="mcq-q {% if q.is_right %}is-right{% else %}is-wrong{% endif %}">
+            <span class="mcq-mark">{% if q.is_right %}✓ Correct{% else %}✗ Wrong{% endif %}</span>
+            <h3><span class="qn">{{ q.number }}.</span> {{ q.text }}</h3>
+            {% for o in q.options %}
+              <div class="mcq-opt result{% if o.is_correct %} correct{% elif o.is_chosen %} chosen-wrong{% endif %}">
+                <span class="letter">{{ o.letter }})</span><span>{{ o.text }}</span>
+                {% if o.is_correct and o.is_chosen %}<span class="tag">✓ Your answer</span>
+                {% elif o.is_correct %}<span class="tag">✓ Correct answer</span>
+                {% elif o.is_chosen %}<span class="tag">✗ Your answer</span>{% endif %}
+              </div>
+            {% endfor %}
+          </div>
+        {% endfor %}
+        <p class="review-note">Your answers are saved and can't be changed.</p>
+      {% else %}
+        {% if completion and completion.status == "rejected" %}
+          <div class="status-pill status-rejected">✗ Needs revision</div><br>
+          {% if completion.review_note %}<div class="review-note">Reviewer note: "{{ completion.review_note }}"</div>{% endif %}
+        {% endif %}
+        <form method="post" id="mcq-form">
+          {% csrf_token %}
+          {% for q in mcq.questions %}
+            <div class="mcq-q">
+              <h3><span class="qn">{{ q.number }}.</span> {{ q.text }}</h3>
+              {% for o in q.options %}
+                <label class="mcq-opt">
+                  <input type="radio" name="q{{ q.number }}" value="{{ o.letter }}" required>
+                  <span class="letter">{{ o.letter }})</span><span>{{ o.text }}</span>
+                </label>
+              {% endfor %}
+            </div>
+          {% endfor %}
+          <button type="submit" class="btn-primary btn-big">Check my answers</button>
+          <p class="review-note" style="margin-top:10px;">You can submit only once. Afterwards you'll see which answers were right.</p>
+        </form>
+      {% endif %}
+    {% elif needs_review %}
       <div id="status-area">
         {% if completion %}
           <div class="status-pill status-{{ completion.status }}">

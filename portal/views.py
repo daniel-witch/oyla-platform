@@ -8,6 +8,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.utils import timezone
 
 from catalog.models import Step
+from catalog.mcq import format_pairs, grade, parse_pairs
 from enrollment.models import StepCompletion, Feedback, Meetup, Group
 from django.http import Http404, JsonResponse
 from users.models import EmailVerificationCode, Student
@@ -209,7 +210,9 @@ def step_detail(request, step_id):
         Step.objects.select_related("lesson__module__course", "resource"), pk=step_id
     )
     role = getattr(request.user, "role", None)
-    needs_review = step.step_type in (Step.StepType.QUIZ, Step.StepType.PRACTICE)
+    # Quiz/practice steps take an answer - and so does any step with multiple-choice questions
+    # (e.g. a video or text step followed by 3 questions).
+    needs_review = step.step_type in (Step.StepType.QUIZ, Step.StepType.PRACTICE) or step.mcq is not None
 
     if role == "student":
         student = request.user.student
@@ -227,7 +230,31 @@ def step_detail(request, step_id):
             # only be marked complete; quiz/practice answers can only be (re)submitted
             # while there is no answer yet or the reviewer asked for a revision.
             ok, msg = True, ""
-            if needs_review:
+            mcq = step.mcq if needs_review else None
+            if mcq:
+                # Multiple choice: checked at once, so the student can review mistakes straight away.
+                chosen = {}
+                for q in mcq["questions"]:
+                    letter = request.POST.get(f"q{q['number']}", "").strip().upper()
+                    if letter in [o["letter"] for o in q["options"]]:
+                        chosen[q["number"]] = letter
+                if completion and completion.status != StepCompletion.Status.REJECTED:
+                    ok, msg = False, "You already submitted this step — it can't be changed or undone."
+                elif len(chosen) < len(mcq["questions"]):
+                    ok, msg = False, "Choose an answer for every question before submitting."
+                else:
+                    score, total, _ = grade(mcq, chosen)
+                    StepCompletion.objects.update_or_create(
+                        student=student, step=step,
+                        defaults={
+                            "answer": format_pairs(chosen),
+                            "status": StepCompletion.Status.APPROVED,
+                            "reviewed_by": None, "reviewed_at": timezone.now(),
+                            "review_note": f"Checked automatically: {score} of {total} correct.",
+                        },
+                    )
+                    msg = f"Checked: {score} of {total} correct."
+            elif needs_review:
                 answer = request.POST.get("answer", "").strip()
                 if completion and completion.status != StepCompletion.Status.REJECTED:
                     ok, msg = False, "You already submitted this step — it can't be changed or undone."
@@ -265,8 +292,13 @@ def step_detail(request, step_id):
 
         lesson_steps = list(step.lesson.steps.all())
         idx = [x.pk for x in lesson_steps].index(step.pk)
+        mcq = step.mcq if needs_review else None
+        mcq_score = mcq_total = mcq_results = None
+        if mcq and completion and completion.answer:
+            mcq_score, mcq_total, mcq_results = grade(mcq, parse_pairs(completion.answer))
         return render(request, "portal/step_detail.html", {
             "step": step, "completion": completion, "needs_review": needs_review,
+            "mcq": mcq, "mcq_score": mcq_score, "mcq_total": mcq_total, "mcq_results": mcq_results,
             "can_submit": needs_review and (completion is None or completion.status == StepCompletion.Status.REJECTED),
             "prev_step": lesson_steps[idx - 1] if idx > 0 else None,
             "next_step": lesson_steps[idx + 1] if idx + 1 < len(lesson_steps) else None,

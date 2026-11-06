@@ -142,6 +142,16 @@ class ResourceSerializer(serializers.ModelSerializer):
         model = Resource
         fields = ["id", "step", "resource_type", "body", "link"]
 
+    def to_representation(self, obj):
+        data = super().to_representation(obj)
+        # A multiple-choice step keeps its answer key here ("Answer key: 1-A, 2-D, 3-C").
+        # Students must not be able to read it through the API.
+        request = self.context.get("request")
+        user = getattr(request, "user", None)
+        if getattr(user, "role", None) == "student" and (data.get("body") or "").lstrip().lower().startswith("answer key"):
+            data["body"] = ""
+        return data
+
 
 class StepSerializer(serializers.ModelSerializer):
     resource = ResourceSerializer(read_only=True)
